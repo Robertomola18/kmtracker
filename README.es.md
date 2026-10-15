@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="static/logo.png" alt="KMtracker" width="320">
+</p>
+
 # KMtracker
 
 Gestor de vehículos autoalojado: kilometraje, combustible, gastos y
@@ -28,7 +32,7 @@ Telegram opcional, en una sola imagen Docker.
 ## Arranque rápido (Docker)
 
 ```bash
-git clone <repo-url> kmtracker && cd kmtracker
+git clone https://github.com/Robertomola18/kmtracker.git && cd kmtracker
 cp .env.example .env          # define KMTRACKER_PASSWORD
 docker compose up -d --build
 ```

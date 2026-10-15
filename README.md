@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="static/logo.png" alt="KMtracker" width="320">
+</p>
+
 # KMtracker
 
 Self-hosted vehicle tracker: mileage, fuel, expenses and maintenance for
@@ -26,7 +30,7 @@ Telegram bot, in a single Docker image.
 ## Quick start (Docker)
 
 ```bash
-git clone <repo-url> kmtracker && cd kmtracker
+git clone https://github.com/Robertomola18/kmtracker.git && cd kmtracker
 cp .env.example .env          # set KMTRACKER_PASSWORD
 docker compose up -d --build
 ```
