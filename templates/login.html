@@ -1,0 +1,13 @@
+{% extends "base_login.html" %}
+{% block title %}Acceder — KMtracker{% endblock %}
+{% block content %}
+<div class="login-box">
+    <img src="{{ url_for('static', filename='logo.png') }}" alt="KMtracker" class="login-logo">
+    <p style="color: var(--text2); margin-bottom: 1.5rem; font-size: 0.95rem;">Introduzca la contraseña</p>
+    <form method="POST">
+        <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+        <input type="password" name="password" placeholder="Contraseña" required autofocus>
+        <button type="submit">Entrar</button>
+    </form>
+</div>
+{% endblock %}

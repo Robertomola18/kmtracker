@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Historial{% endblock %}
+{% block content %}
+<h1>Historial de viajes
+    {% if selected_car %}
+    <span class="section-actions">
+        <a href="/coche/{{ selected_car.matricula | urlencode }}/export/entries.csv" class="btn-sm">⬇ Exportar</a>
+    </span>
+    {% endif %}
+</h1>
+
+<form method="GET" class="form-inline">
+    <label>Coche
+        <select name="car_id" onchange="this.form.submit()">
+            <option value="">Todos</option>
+            {% for c in cars %}
+                <option value="{{ c.id }}" {% if selected_car_id == c.id %}selected{% endif %}>{{ c.matricula }} · {{ c.modelo }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    <button type="submit" class="btn">Filtrar</button>
+</form>
+
+{% if entries %}
+    <table class="table">
+        <thead><tr><th>Fecha</th><th>Coche</th><th>Tipo</th><th>Lectura</th><th>km</th><th>Acumulado</th><th>Reset</th><th>Nota</th></tr></thead>
+        <tbody>
+            {% for e in entries %}
+            <tr>
+                <td>{{ e.fecha }}</td>
+                <td>{{ e.matricula }}</td>
+                <td>{{ e.tipo }}</td>
+                <td class="num">{{ "%.1f"|format(e.lectura) }}</td>
+                <td class="num">{{ "%.1f"|format(e.km_calculados) }}</td>
+                <td class="num">{{ "%.1f"|format(e.km_acumulado) }}</td>
+                <td class="num">{{ 'Si' if e.is_reset else 'No' }}</td>
+                <td class="num">{{ e.nota or '' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p>Sin entradas registradas.</p>
+{% endif %}
+{% endblock %}

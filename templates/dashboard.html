@@ -1,0 +1,397 @@
+{% extends "base.html" %}
+{% block title %}Panel{% endblock %}
+{% block head_extra %}<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>{% endblock %}
+{% block content %}
+<h1>Panel</h1>
+
+<div class="card-grid">
+    {% for c in cards %}
+        {% set vendido = c.fecha_baja and c.fecha_baja <= today %}
+        <a href="/coche/{{ c.matricula | urlencode }}" class="card-link">
+            <div class="card car-card{% if c.es_prueba or vendido %} car-excluido{% endif %}">
+                <div class="car-card-header">
+                    {% if c.foto_url %}
+                        <img src="{{ c.foto_url }}" alt="" class="car-thumb">
+                    {% endif %}
+                    {{ plate(c.matricula, c.pais) }}
+                    <span class="tag {% if c.es_prueba %}tag-warn{% elif vendido %}tag-danger{% else %}tag-info{% endif %}">
+                        {{ c.modo }}
+                        {%- if c.es_prueba %} · PRUEBA{% endif %}
+                        {%- if vendido %} · VENDIDO{% endif %}
+                    </span>
+                </div>
+                <div class="car-card-body">
+                    <h2>{{ c.modelo }} ({{ c.anyo }})</h2>
+                    {% if c.es_prueba %}<span class="badge badge-warn">Excluido de estadisticas</span>{% endif %}
+                    {% if vendido %}<span class="badge badge-danger">Vendido{% if c.fecha_baja %} el {{ c.fecha_baja }}{% endif %}</span>{% endif %}
+                    <div class="stats">
+                        {% if 'km_total' in widgets %}
+                        <div class="stat">
+                            <span class="stat-label">Total</span>
+                            <span class="stat-value">{{ "%.0f"|format(c.km_actual) }} km</span>
+                        </div>
+                        {% endif %}
+                        {% if 'km_mes' in widgets %}
+                        <div class="stat">
+                            <span class="stat-label">Este mes</span>
+                            <span class="stat-value">{{ "%.0f"|format(c.km_mes) }} km
+                                {%- if c.km_mes_ant %} / {{ "%.0f"|format(c.km_mes_ant) }} km{% endif -%}
+                            </span>
+                        </div>
+                        {% endif %}
+                        {% if 'consumo' in widgets and c.consumo %}
+                        <div class="stat">
+                            <span class="stat-label">Consumo</span>
+                            <span class="stat-value">{{ c.consumo }} L/100km</span>
+                        </div>
+                        {% endif %}
+                        {% if 'gasto_mes' in widgets %}
+                        <div class="stat">
+                            <span class="stat-label">Gasto mes</span>
+                            <span class="stat-value">{{ "%.2f"|format(c.gasto) }} €
+                                {%- if c.gasto_ant %} / {{ "%.2f"|format(c.gasto_ant) }} €{% endif -%}
+                            </span>
+                        </div>
+                        {% endif %}
+                        {% if 'gasto_anual' in widgets %}
+                        <div class="stat">
+                            <span class="stat-label">Gasto año</span>
+                            <span class="stat-value">{{ "%.2f"|format(c.gasto_anual) }} €
+                                {%- if c.gasto_anual_ant %} / {{ "%.2f"|format(c.gasto_anual_ant) }} €{% endif -%}
+                            </span>
+                        </div>
+                        {% endif %}
+                        {% if 'gasto_total' in widgets %}
+                        <div class="stat">
+                            <span class="stat-label">Gasto total</span>
+                            <span class="stat-value">{{ "%.2f"|format(c.total_gastos) }} €</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% if 'eur_km' in widgets and c.eur_km %}
+                        <div class="stat" style="margin-bottom:0.5rem">
+                            <span class="stat-label">Coste total / km</span>
+                            <span class="stat-value">{{ "%.4f"|format(c.eur_km) }} €/km</span>
+                        </div>
+                    {% endif %}
+                    {% set all_alerts = [] %}
+                    {% if 'alertas_mantenimiento' in widgets %}{% set all_alerts = all_alerts + c.alerts %}{% endif %}
+                    {% if 'alertas_renovacion' in widgets %}{% set all_alerts = all_alerts + c.renewals %}{% endif %}
+                    {% if all_alerts %}
+                        <div class="alerts">
+                            {% for a in all_alerts %}
+                                <div class="alert alert-{{ a.status }}">
+                                    {% if a.vencido is defined and a.vencido %}
+                                        <strong>{{ a.nombre }} VENCIÓ</strong> ({{ "%.0f"|format(-a.km_restante) }} km excedidos)
+                                    {% elif a.dias_restantes is defined %}
+                                        {{ a.tipo }}
+                                        {% if a.dias_restantes < 0 %}
+                                            <strong>VENCIÓ</strong> hace {{ (-a.dias_restantes) }} dias
+                                        {% else %}
+                                            vence {{ a.fecha }} ({{ a.dias_restantes }} dias)
+                                        {% endif %}
+                                    {% else %}
+                                        {{ a.nombre }}: {{ "%.0f"|format(a.km_restante) }} km
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alerts"><span class="alert-ok">Sin alertas</span></div>
+                    {% endif %}
+                </div>
+            </div>
+        </a>
+    {% endfor %}
+</div>
+
+<h2 style="margin-top:2rem;">Estadisticas globales</h2>
+<div class="charts-grid">
+    <div class="chart-box">
+        <h3>Uso por coche</h3>
+        <canvas id="usageChart" height="200"></canvas>
+        <div class="chart-legend">
+            {% for u in usage %}
+            <div class="chart-legend-item">
+                <span>{{ u.modelo }} ({{ u.matricula }})</span>
+                <span>{{ "%.0f"|format(u.km) }} km · {{ u.pct }}%</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="chart-box">
+        <h3>Gastos: Combustible vs Mantenimiento</h3>
+        <canvas id="expenseChart" height="200"></canvas>
+        <div class="chart-legend">
+            <div class="chart-legend-item">
+                <span><span class="dot" style="background:#f1c40f"></span> Combustible</span>
+                <span>{{ "%.2f"|format(breakdown.fuel) }} €</span>
+            </div>
+            <div class="chart-legend-item">
+                <span><span class="dot" style="background:#e74c3c"></span> Mantenimiento / otros</span>
+                <span>{{ "%.2f"|format(breakdown.expenses) }} €</span>
+            </div>
+        </div>
+    </div>
+    <div class="chart-box" style="grid-column: 1 / -1;">
+        <h3>Gasto mensual (12 meses)</h3>
+        <form method="GET" action="/panel" class="form-inline" style="margin-bottom:0.75rem;">
+            <label style="margin-right:0.5rem;">Coche
+                <select name="ccar" onchange="this.form.submit()">
+                    <option value="">Todos</option>
+                    {% for c in cards %}
+                        <option value="{{ c.id }}" {% if chart_car == c.id %}selected{% endif %}>{{ c.matricula }} · {{ c.modelo }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <input type="hidden" name="mw" value="{{ mw }}">
+            <button type="submit" class="btn">Filtrar</button>
+            <a href="/panel?ccar={{ chart_car or '' }}&mw={{ mw + 1 }}" class="btn" style="margin-left:0.5rem;">&#8249; Anterior</a>
+            {% if mw > 0 %}
+                <a href="/panel?ccar={{ chart_car or '' }}&mw={{ mw - 1 }}" class="btn" style="margin-left:0.25rem;">Siguiente &#8250;</a>
+            {% else %}
+                <span class="btn btn-disabled" style="margin-left:0.25rem;opacity:.5;">Siguiente &#8250;</span>
+            {% endif %}
+        </form>
+        <canvas id="monthlyChart" height="200"></canvas>
+        <div class="chart-legend">
+            <div class="chart-legend-item"><span><span class="dot" style="background:#f1c40f"></span> Combustible</span></div>
+            <div class="chart-legend-item"><span><span class="dot" style="background:#e74c3c"></span> Gastos</span></div>
+            <div class="chart-legend-item"><span><span class="dot" style="background:#9b59b6"></span> Mantenimiento</span></div>
+            <div class="chart-legend-item"><span><span class="dot" style="background:#0abc8c"></span> Σ Total</span></div>
+        </div>
+    </div>
+</div>
+
+<h2 style="margin-top:2rem;">Estadisticas mensuales</h2>
+<form method="GET" action="/panel" class="form-inline">
+    <label>Coche
+        <select name="scar">
+            <option value="">Todos</option>
+            {% for c in cards %}
+                <option value="{{ c.id }}" {% if stats_car == c.id %}selected{% endif %}>{{ c.matricula }} · {{ c.modelo }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    <label>Anyo <input type="number" name="year" value="{{ stats_year }}" min="2020"></label>
+    <label>Mes
+        <select name="month">
+            {% for m in range(1, 13) %}
+                <option value="{{ m }}" {% if stats_month == m %}selected{% endif %}>{{ m }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    <button type="submit" class="btn">Ver</button>
+</form>
+
+{% if stats_daily %}
+    <div class="charts-grid">
+        <div class="chart-box">
+            <h3>Gasto por dia del mes</h3>
+            <canvas id="dailyChart" height="200"></canvas>
+        </div>
+        {% if stats_by_car %}
+        <div class="chart-box">
+            <h3>Gasto por coche ({{ stats_month }}/{{ stats_year }})</h3>
+            <canvas id="byCarChart" height="200"></canvas>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if stats_by_car %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Coche</th><th>Km</th><th>Litros</th><th>Repostajes</th>
+                <th>Combustible</th><th>Gastos</th><th>Mantenimiento</th>
+                <th>Total</th><th>Consumo L/100km</th><th>EUR/km</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for b in stats_by_car %}
+            <tr>
+                <td>{{ b.modelo }} ({{ b.matricula }})</td>
+                <td class="num">{{ "%.0f"|format(b.km) }}</td>
+                <td class="num">{{ "%.1f"|format(b.litros) }}</td>
+                <td class="num">{{ b.n_rep }}</td>
+                <td class="num">{{ "%.2f"|format(b.fuel) }} EUR</td>
+                <td>{{ "%.2f"|format(b.expenses) }} EUR</td>
+                <td>{{ "%.2f"|format(b.maintenance) }} EUR</td>
+                <td><strong>{{ "%.2f"|format(b.total) }} EUR</strong></td>
+                <td class="num">{{ "%.2f"|format(b.consumo) if b.consumo is not none else '-' }}</td>
+                <td>{{ "%.4f"|format(b.eur_km) if b.eur_km is not none else '-' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+{% else %}
+    <p>Sin datos para este periodo.</p>
+{% endif %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var colors = ['#0abc8c', '#34e0b0', '#f1c40f', '#e74c3c', '#9b59b6', '#3498db'];
+    var C_FUEL = '#f1c40f';
+    var C_EXP = '#e74c3c';
+    var C_MTTO = '#9b59b6';
+    var tickColor = 'rgba(232,234,246,0.45)';
+    var gridColor = 'rgba(255,255,255,0.06)';
+    var tooltipStyle = {
+        backgroundColor: 'rgba(10,10,28,0.95)',
+        titleColor: '#e8eaf6',
+        bodyColor: '#e8eaf6',
+        borderColor: 'rgba(10,188,140,0.35)',
+        borderWidth: 1,
+        padding: 10,
+        cornerRadius: 10,
+        displayColors: true
+    };
+
+    var monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+    var monthlyData = {{ monthly | tojson }};
+    new Chart(monthlyCtx, {
+        type: 'bar',
+        data: {
+            labels: monthlyData.map(function(m){ return m.label; }),
+            datasets: [
+                { label: 'Combustible', data: monthlyData.map(function(m){ return m.fuel; }), backgroundColor: C_FUEL, borderRadius: 4 },
+                { label: 'Gastos', data: monthlyData.map(function(m){ return m.expenses; }), backgroundColor: C_EXP, borderRadius: 4 },
+                { label: 'Mantenimiento', data: monthlyData.map(function(m){ return m.maintenance; }), backgroundColor: C_MTTO, borderRadius: 4 }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: { x: { stacked: true, ticks: { maxTicksLimit: 12, color: tickColor }, grid: { color: gridColor } }, y: { stacked: true, ticks: { callback: function(v){ return v + ' EUR'; }, color: tickColor }, grid: { color: gridColor } } },
+            plugins: {
+                legend: { display: false },
+                tooltip: Object.assign({}, tooltipStyle, {
+                    callbacks: {
+                        afterBody: function(items) {
+                            var idx = items[0].dataIndex;
+                            return 'Total: ' + monthlyData[idx].total.toFixed(2) + ' EUR';
+                        }
+                    }
+                })
+            }
+        }
+    });
+
+    var usageCtx = document.getElementById('usageChart').getContext('2d');
+    new Chart(usageCtx, {
+        type: 'doughnut',
+        data: {
+            labels: [{% for u in usage %}'{{ u.modelo }} ({{ u.matricula }})',{% endfor %}],
+            datasets: [{
+                data: [{% for u in usage %}{{ u.km }},{% endfor %}],
+                backgroundColor: colors.slice(0, {{ usage|length }}),
+                borderWidth: 2,
+                borderColor: '#08081a',
+                hoverOffset: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            cutout: '68%',
+            plugins: {
+                legend: { display: false },
+                tooltip: Object.assign({}, tooltipStyle, {
+                    callbacks: {
+                        label: function(ctx) {
+                            var total = ctx.dataset.data.reduce(function(a,b){return a+b}, 0);
+                            var pct = ((ctx.parsed / total) * 100).toFixed(1);
+                            return ctx.label + ': ' + ctx.parsed.toLocaleString() + ' km (' + pct + '%)';
+                        }
+                    }
+                })
+            }
+        }
+    });
+
+    var expCtx = document.getElementById('expenseChart').getContext('2d');
+    new Chart(expCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Combustible', 'Mantenimiento / otros'],
+            datasets: [{
+                data: [{{ breakdown.fuel }}, {{ breakdown.expenses }}],
+                backgroundColor: [C_FUEL, C_EXP],
+                borderWidth: 2,
+                borderColor: '#08081a',
+                hoverOffset: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            cutout: '68%',
+            plugins: {
+                legend: { display: false },
+                tooltip: Object.assign({}, tooltipStyle, {
+                    callbacks: {
+                        label: function(ctx) {
+                            var total = ctx.dataset.data.reduce(function(a,b){return a+b}, 0);
+                            var pct = ((ctx.parsed / total) * 100).toFixed(1);
+                            return ctx.label + ': ' + ctx.parsed.toFixed(2) + ' EUR (' + pct + '%)';
+                        }
+                    }
+                })
+            }
+        }
+    });
+
+    {% if stats_daily %}
+    var dailyData = {{ stats_daily | tojson }};
+    new Chart(document.getElementById('dailyChart'), {
+        type: 'bar',
+        data: {
+            labels: dailyData.map(function(d){ return d.fecha; }),
+            datasets: [
+                { label: 'Combustible', data: dailyData.map(function(d){ return d.fuel; }), backgroundColor: C_FUEL, borderRadius: 3 },
+                { label: 'Gastos', data: dailyData.map(function(d){ return d.expenses; }), backgroundColor: C_EXP, borderRadius: 3 },
+                { label: 'Mantenimiento', data: dailyData.map(function(d){ return d.maintenance; }), backgroundColor: C_MTTO, borderRadius: 3 }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: { x: { stacked: true, ticks: { maxTicksLimit: 15, color: tickColor }, grid: { color: gridColor } }, y: { stacked: true, ticks: { callback: function(v){ return v + ' EUR'; }, color: tickColor }, grid: { color: gridColor } } },
+            plugins: { legend: { display: false }, tooltip: tooltipStyle }
+        }
+    });
+    {% endif %}
+
+    {% if stats_daily and stats_by_car %}
+    var byCarData = {{ stats_by_car | tojson }};
+    var byColors = ['#0abc8c', '#34e0b0', '#f1c40f', '#e74c3c', '#9b59b6', '#3498db'];
+    new Chart(document.getElementById('byCarChart'), {
+        type: 'doughnut',
+        data: {
+            labels: byCarData.map(function(b){ return b.modelo + ' (' + b.matricula + ')'; }),
+            datasets: [{
+                data: byCarData.map(function(b){ return b.total; }),
+                backgroundColor: byColors.slice(0, byCarData.length),
+                borderWidth: 2,
+                borderColor: '#08081a',
+                hoverOffset: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            cutout: '68%',
+            plugins: {
+                legend: { display: false },
+                tooltip: Object.assign({}, tooltipStyle, {
+                    callbacks: {
+                        label: function(ctx) {
+                            var total = ctx.dataset.data.reduce(function(a,b){return a+b}, 0);
+                            var pct = total > 0 ? ((ctx.parsed / total) * 100).toFixed(1) : 0;
+                            return ctx.label + ': ' + ctx.parsed.toFixed(2) + ' EUR (' + pct + '%)';
+                        }
+                    }
+                })
+            }
+        }
+    });
+    {% endif %}
+});
+</script>
+{% endblock %}

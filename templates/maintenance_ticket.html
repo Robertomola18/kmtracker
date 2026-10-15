@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ticket Mantenimiento</title>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+    @page { margin: 0; size: 58mm auto; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        font-family: 'Courier New', monospace;
+        font-size: 10px;
+        width: 58mm;
+        padding: 3mm;
+        color: #000;
+        background: #fff;
+    }
+    img.bw { filter: brightness(0) saturate(100%); -webkit-filter: brightness(0) saturate(100%); }
+    img.firma { filter: grayscale(100%); -webkit-filter: grayscale(100%); }
+    .center { text-align: center; }
+    h1 { font-size: 12px; margin: 2mm 0; text-transform: uppercase; letter-spacing: 1px; }
+    h2 { font-size: 10px; margin: 1mm 0; }
+    .divider { border-top: 1px dashed #000; margin: 2mm 0; }
+    .line { display: flex; justify-content: space-between; font-size: 9px; margin: 0.5mm 0; }
+    .line .label { font-weight: bold; }
+    .items { margin: 1mm 0; }
+    .item { font-size: 9px; padding: 0.3mm 0; }
+    .item::before { content: '  \2713  '; }
+    .total { font-size: 11px; font-weight: bold; margin: 1mm 0; text-align: right; }
+    .next-item { font-size: 9px; padding: 0.3mm 0; }
+    .next-item.vencido { font-weight: bold; }
+    .next-item.vencido::before { content: '  \26A0  '; }
+    .next-item.proximo::before { content: '  \2192  '; }
+    .footer { margin-top: 2mm; font-size: 8px; text-align: center; }
+    .note { font-size: 8px; margin: 1mm 0; font-style: italic; }
+    .toolbar { display: flex; gap: 5px; justify-content: center; margin-bottom: 5px; }
+    .toolbar button { font-size: 12px; padding: 8px 16px; border: 1px solid #ccc; border-radius: 4px; background: #f5f5f5; cursor: pointer; }
+    .toolbar button:hover { background: #e0e0e0; }
+    @media print { .toolbar { display: none !important; } }
+    @media print {
+        body { margin: 0; padding: 3mm; }
+    }
+</style>
+</head>
+<body>
+    <div class="toolbar" id="toolbar">
+        <button onclick="window.print()">📄 PDF / Imprimir</button>
+        <button onclick="descargarPNG()">🖼 Guardar PNG</button>
+    </div>
+    <div id="ticket">
+    <div class="center">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="" class="bw" style="max-width:40mm;">
+        <h1>Registro de Mantenimiento</h1>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="line"><span class="label">Fecha:</span><span>{{ record.fecha }}</span></div>
+    <div class="line"><span class="label">Vehiculo:</span><span>{{ record.modelo }}</span></div>
+    <div class="line"><span class="label">Matricula:</span><span>{{ record.matricula }}</span></div>
+    {% if car.motor %}<div class="line"><span class="label">Motor:</span><span>{{ car.motor }}</span></div>{% endif %}
+    {% if car.bastidor %}<div class="line"><span class="label">VIN:</span><span>{{ car.bastidor }}</span></div>{% endif %}
+    <div class="line"><span class="label">Km actual:</span><span>{{ "%.0f"|format(record.km) }} km</span></div>
+
+    <div class="divider"></div>
+
+    <h2>Trabajos realizados</h2>
+    <div class="items">
+        {% for item in record['items'] %}
+        <div class="item">{{ item.nombre }}</div>
+        {% endfor %}
+    </div>
+
+    {% if record.coste %}
+    <div class="divider"></div>
+    <div class="total">Total: {{ "%.2f"|format(record.coste) }} EUR</div>
+    {% endif %}
+
+    {% if record.nota %}
+    <div class="divider"></div>
+    <h2>Notas</h2>
+    <div class="note">{{ record.nota }}</div>
+    {% endif %}
+
+    <div class="divider"></div>
+
+    <h2>Proximas revisiones</h2>
+    {% if next_items %}
+        {% for n in next_items %}
+            <div class="next-item {% if n.km_restante <= 0 %}vencido{% else %}proximo{% endif %}">
+                {{ n.nombre }}
+                {% if n.km_restante <= 0 %}
+                    VENCIDO (toca a {{ "%.0f"|format(n.km_ultimo + n.intervalo_km) }} km)
+                {% else %}
+                    {{ "%.0f"|format(n.km_restante) }} km ({{ "%.0f"|format(n.km_ultimo + n.intervalo_km) }} km)
+                {% endif %}
+            </div>
+        {% endfor %}
+    {% else %}
+        <div style="font-size:8px;">Sin items de mantenimiento</div>
+    {% endif %}
+
+    <div class="divider"></div>
+
+    <div class="footer">
+        Generado el {{ record.created_at[:10] if record.created_at else '' }}
+    </div>
+</div>
+<script>
+function descargarPNG() {
+    var btn = document.getElementById('toolbar');
+    btn.style.display = 'none';
+    html2canvas(document.getElementById('ticket'), { scale: 3, useCORS: true }).then(function(canvas) {
+        btn.style.display = 'flex';
+        var link = document.createElement('a');
+        link.download = 'ticket_mantenimiento_{{ record.id }}.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    }).catch(function() {
+        btn.style.display = 'flex';
+        alert('Error al generar la imagen. Prueba con PDF / Imprimir.');
+    });
+}
+</script>
+</body>
+</html>

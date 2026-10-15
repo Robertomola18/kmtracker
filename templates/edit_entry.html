@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Editar viaje{% endblock %}
+{% block content %}
+<h1>Editar viaje</h1>
+<p style="color: var(--text2); margin-bottom: 1.5rem;">{{ car.modelo }} {{ plate(car.matricula, car.pais) }}</p>
+<form method="POST" class="form" style="max-width: 500px;">
+    <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+    <label>Tipo
+        <select name="tipo" required id="tipo-select">
+            <option value="partial" {% if entry.tipo == 'partial' %}selected{% endif %}>Parcial</option>
+            <option value="total" {% if entry.tipo == 'total' %}selected{% endif %}>Total (odometro)</option>
+            <option value="correction" {% if entry.tipo == 'correction' %}selected{% endif %}>Correccion</option>
+        </select>
+    </label>
+    <label>Lectura <input type="text" inputmode="decimal" name="lectura" value="{{ entry.lectura }}" required placeholder="km"></label>
+    <label class="checkbox-label" id="reset-field">
+        <input type="checkbox" name="is_reset" {% if entry.is_reset %}checked{% endif %}> Reseteaste el parcial?
+    </label>
+    <label>Fecha <input type="date" name="fecha" value="{{ entry.fecha }}"></label>
+    <label>Nota <input type="text" name="nota" value="{{ entry.nota or '' }}" placeholder="opcional"></label>
+    <div style="display:flex;gap:0.75rem;margin-top:1.5rem;">
+        <button type="submit" class="btn">Guardar</button>
+        <a href="/coche/{{ car.matricula | urlencode }}" class="btn btn-secondary">Cancelar</a>
+    </div>
+</form>
+<script>
+    document.getElementById('tipo-select').addEventListener('change', function() {
+        var resetField = document.getElementById('reset-field');
+        resetField.style.display = (this.value === 'partial') ? '' : 'none';
+    });
+    document.getElementById('tipo-select').dispatchEvent(new Event('change'));
+</script>
+{% endblock %}

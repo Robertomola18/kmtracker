@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Admin - KMtracker{% endblock %}
+{% block content %}
+<h2>Administracion</h2>
+
+<h3>Bot de Telegram</h3>
+<form method="POST" class="form" style="margin-bottom: 2rem;">
+    <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+    <label>Token del bot</label>
+    <input type="text" name="telegram_token" value="{{ current_token }}" placeholder="123456789:ABC..." class="input">
+    <label style="margin-top: .75rem;">IDs autorizados (lista blanca)</label>
+    <input type="text" name="telegram_allowed_ids" value="{{ current_ids }}" placeholder="111111111, 222222222" class="input">
+    <small>IDs de Telegram separados por comas. Vacio = cualquiera puede usar el bot (no recomendado). Reinicia el bot para aplicar los cambios.</small>
+    <button type="submit" class="btn btn-primary">Guardar</button>
+</form>
+
+<h3>Copias de seguridad</h3>
+<div class="form" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
+    <form method="POST" action="/admin/backup-now">
+        <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+        <button type="submit" class="btn btn-primary">Crear copia ahora</button>
+    </form>
+    <a href="/admin/backup" class="btn">Descargar base de datos actual</a>
+    <form method="POST" action="/admin/restore" enctype="multipart/form-data" style="display: flex; gap: 0.5rem; align-items: flex-end;">
+        <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+        <label>Restaurar desde archivo .db
+            <input type="file" name="database" accept=".db" required style="display: block; margin-top: 0.25rem;">
+        </label>
+        <button type="submit" class="btn btn-secondary" onclick="return confirm('Se reemplazara la base de datos actual. Continuar?')">Restaurar</button>
+    </form>
+</div>
+<p style="margin-top: 0.5rem; font-size: 0.85rem; color: rgba(255,255,255,0.5);">
+    Directorio de copias: <code>{{ backup_dir }}</code> · rotacion configurable con
+    <code>KM_BACKUP_KEEP_COUNT</code> y <code>KM_BACKUP_KEEP_DAYS</code>.
+</p>
+
+{% if backups %}
+<table style="margin-top: 0.75rem; width: 100%; border-collapse: collapse;">
+    <thead>
+        <tr>
+            <th style="text-align: left;">Copia</th>
+            <th style="text-align: left;">Tamano</th>
+            <th style="text-align: left;">Fecha</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for b in backups %}
+        <tr>
+            <td><a href="/admin/backup/{{ b.name }}">{{ b.name }}</a></td>
+            <td>{{ b.size_h }}</td>
+            <td>{{ b.mtime_h }}</td>
+            <td style="display: flex; gap: 0.4rem; justify-content: flex-end;">
+                <form method="POST" action="/admin/backup/{{ b.name }}/restore"
+                      onsubmit="return confirm('Restaurar {{ b.name }}? La base actual se guardara como .bak')">
+                    <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+                    <button class="btn btn-secondary" type="submit">Restaurar</button>
+                </form>
+                <form method="POST" action="/admin/backup/{{ b.name }}/delete"
+                      onsubmit="return confirm('Borrar {{ b.name }}?')">
+                    <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+                    <button class="btn" type="submit">Borrar</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No hay copias de seguridad todavia.</p>
+{% endif %}
+{% endblock %}

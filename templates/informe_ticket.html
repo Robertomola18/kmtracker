@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ticket Informe</title>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+    @page { margin: 0; size: 58mm auto; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        font-family: 'Courier New', monospace;
+        font-size: 10px;
+        width: 58mm;
+        padding: 3mm;
+        color: #000;
+        background: #fff;
+    }
+    img.bw { filter: brightness(0) saturate(100%); -webkit-filter: brightness(0) saturate(100%); }
+    img.firma { filter: grayscale(100%) contrast(150%); -webkit-filter: grayscale(100%) contrast(150%); }
+    .center { text-align: center; }
+    h1 { font-size: 12px; margin: 2mm 0; text-transform: uppercase; letter-spacing: 1px; }
+    .divider { border-top: 1px dashed #000; margin: 2mm 0; }
+    .line { display: flex; justify-content: space-between; font-size: 9px; margin: 0.5mm 0; }
+    .line .label { font-weight: bold; }
+    table { width: 100%; border-collapse: collapse; font-size: 9px; }
+    td, th { padding: 0.5mm 1mm; text-align: left; }
+    td.r, th.r { text-align: right; }
+    .total-row td { border-top: 1px dashed #000; font-weight: bold; }
+    .footer { margin-top: 2mm; font-size: 8px; text-align: center; }
+    .toolbar { display: flex; gap: 5px; justify-content: center; margin-bottom: 5px; }
+    .toolbar button { font-size: 12px; padding: 8px 16px; border: 1px solid #ccc; border-radius: 4px; background: #f5f5f5; cursor: pointer; }
+    .toolbar button:hover { background: #e0e0e0; }
+    @media print { .toolbar { display: none !important; } }
+</style>
+</head>
+<body>
+    <div class="toolbar" id="toolbar">
+        <button onclick="window.print()">📄 PDF / Imprimir</button>
+        <button onclick="descargarPNG()">🖼 Guardar PNG</button>
+    </div>
+    <div id="ticket">
+        <div class="center">
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="" class="bw" style="max-width:40mm;">
+            <h1>Informe {{ year }}/{{ '%02d'|format(month) }}</h1>
+        </div>
+        {% if car %}
+        <div class="line"><span class="label">Vehiculo:</span><span>{{ car.modelo }}</span></div>
+        <div class="line"><span class="label">Matricula:</span><span>{{ car.matricula }}</span></div>
+        {% if car.motor %}<div class="line"><span class="label">Motor:</span><span>{{ car.motor }}</span></div>{% endif %}
+        {% if car.bastidor %}<div class="line"><span class="label">VIN:</span><span>{{ car.bastidor }}</span></div>{% endif %}
+        {% endif %}
+        <div class="divider"></div>
+        {% if report %}
+        <table>
+            <thead><tr><th>Fecha</th><th>Coche</th><th class="r">Km</th><th class="r">Comb €</th><th class="r">Gastos €</th><th class="r">Total €</th></tr></thead>
+            <tbody>
+                {% set total_km = [0] %}
+                {% set total_gasto = [0] %}
+                {% for r in report %}
+                <tr>
+                    <td>{{ r.fecha }}</td>
+                    <td>{{ r.matricula }}</td>
+                    <td class="r">{{ "%.1f"|format(r.km) }}</td>
+                    <td class="r">{{ "%.2f"|format(r.gasto_combustible) }}</td>
+                    <td class="r">{{ "%.2f"|format(r.gasto_mantenimiento) }}</td>
+                    <td class="r">{{ "%.2f"|format(r.total) }} €</td>
+                </tr>
+                {% if total_km.append(total_km.pop() + r.km) %}{% endif %}
+                {% if total_gasto.append(total_gasto.pop() + r.total) %}{% endif %}
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr><td colspan="6" style="border-top:1px dashed #000;padding:0;"></td></tr>
+                <tr class="total-row">
+                    <td>Total</td>
+                    <td></td>
+                    <td class="r">{{ "%.1f"|format(total_km[0]) }} km</td>
+                    <td colspan="2"></td>
+                    <td class="r">{{ "%.2f"|format(total_gasto[0]) }} €</td>
+                </tr>
+            </tfoot>
+        </table>
+        {% else %}
+            <p style="font-size:9px;">Sin datos para este periodo.</p>
+        {% endif %}
+        <div class="divider"></div>
+        <div class="footer">
+            Generado el {{ year }}/{{ '%02d'|format(month) }}
+        </div>
+    </div>
+<script>
+function descargarPNG() {
+    var btn = document.getElementById('toolbar');
+    btn.style.display = 'none';
+    html2canvas(document.getElementById('ticket'), { scale: 3, useCORS: true }).then(function(canvas) {
+        btn.style.display = 'flex';
+        var link = document.createElement('a');
+        link.download = 'informe_{{ year }}_{{ "%02d"|format(month) }}.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    }).catch(function() {
+        btn.style.display = 'flex';
+        alert('Error al generar la imagen. Prueba con PDF / Imprimir.');
+    });
+}
+</script>
+</body>
+</html>

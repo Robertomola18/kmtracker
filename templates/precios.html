@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Precios combustible{% endblock %}
+{% block head_extra %}<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>{% endblock %}
+{% block content %}
+<h1>Evolucion precios combustible</h1>
+
+<label>Filtrar por coche
+    <select id="car-filter" onchange="location.href='?car_id='+this.value">
+        <option value="">Todos</option>
+        {% for c in cars %}
+            <option value="{{ c.id }}" {% if selected_car == c.id %}selected{% endif %}>{{ c.matricula }} · {{ c.modelo }}</option>
+        {% endfor %}
+    </select>
+</label>
+
+{% set total_repostajes = fuel_data | length %}
+{% set precios_litros = fuel_data | map(attribute='precio_litro') | list %}
+{% set precio_max = (precios_litros | max) if precios_litros else 0 %}
+{% set precio_min = (precios_litros | min) if precios_litros else 0 %}
+{% set precio_medio = (precios_litros | sum / total_repostajes) if total_repostajes else 0 %}
+{% set litros_total = fuel_data | sum(attribute='litros') %}
+<div class="stats">
+    <div class="stat">
+        <span class="stat-label">Repostajes</span>
+        <span class="stat-value">{{ total_repostajes }}</span>
+    </div>
+    <div class="stat">
+        <span class="stat-label">Precio medio</span>
+        <span class="stat-value">{{ "%.3f"|format(precio_medio) }} €/L</span>
+    </div>
+    <div class="stat">
+        <span class="stat-label">Min / Max</span>
+        <span class="stat-value">{{ "%.3f"|format(precio_min) }} / {{ "%.3f"|format(precio_max) }} €/L</span>
+    </div>
+    <div class="stat">
+        <span class="stat-label">Litros</span>
+        <span class="stat-value">{{ "%.1f"|format(litros_total) }} L</span>
+    </div>
+</div>
+
+<canvas id="priceChart" height="100"></canvas>
+
+<script>
+    const data = {{ fuel_data | tojson }};
+    const gasolina = data.filter(f => f.tipo_combustible === 'gasolina');
+    const diesel = data.filter(f => f.tipo_combustible === 'diesel');
+    var tickColor = 'rgba(232,234,246,0.45)';
+    var gridColor = 'rgba(255,255,255,0.06)';
+
+    new Chart(document.getElementById('priceChart'), {
+        type: 'line',
+        data: {
+            datasets: [
+                {
+                    label: 'Gasolina (€/L)',
+                    data: gasolina.map(f => ({ x: f.fecha, y: f.precio_litro })),
+                    borderColor: '#f1c40f',
+                    backgroundColor: 'rgba(241, 196, 15, 0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 3,
+                    pointBackgroundColor: '#f1c40f'
+                },
+                {
+                    label: 'Diésel (€/L)',
+                    data: diesel.map(f => ({ x: f.fecha, y: f.precio_litro })),
+                    borderColor: '#0abc8c',
+                    backgroundColor: 'rgba(10, 188, 140, 0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 3,
+                    pointBackgroundColor: '#0abc8c'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: { type: 'category', ticks: { maxTicksLimit: 12, color: tickColor }, grid: { color: gridColor } },
+                y: { title: { display: true, text: '€/litro', color: tickColor }, ticks: { color: tickColor }, grid: { color: gridColor } }
+            },
+            plugins: {
+                legend: { labels: { color: '#e8eaf6' } },
+                tooltip: {
+                    backgroundColor: 'rgba(10,10,28,0.95)',
+                    titleColor: '#e8eaf6',
+                    bodyColor: '#e8eaf6',
+                    borderColor: 'rgba(10,188,140,0.35)',
+                    borderWidth: 1,
+                    padding: 10,
+                    cornerRadius: 10
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

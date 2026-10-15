@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Ajustes dashboard{% endblock %}
+{% block content %}
+<h1>Widgets del dashboard</h1>
+<p>Selecciona que estadisticas quieres ver en el dashboard para cada coche:</p>
+<form method="POST" class="form">
+    <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+    {% set labels = {
+        'km_total': 'Km total',
+        'km_mes': 'Km este mes',
+        'consumo': 'Consumo L/100km',
+        'gasto_mes': 'Gasto combustible del mes',
+        'gasto_anual': 'Gasto total del año',
+        'eur_km': 'Coste total €/km',
+        'gasto_total': 'Gasto total acumulado',
+        'alertas_mantenimiento': 'Alertas de mantenimiento',
+        'alertas_renovacion': 'Alertas seguro / ITV / impuesto',
+    } %}
+    {% for w in widgets %}
+        <label class="checkbox-label">
+            <input type="checkbox" name="widgets" value="{{ w }}" {% if w in active %}checked{% endif %}>
+            {{ labels.get(w, w) }}
+        </label>
+    {% endfor %}
+    <button type="submit" class="btn">Guardar</button>
+    <a href="/panel" class="btn btn-secondary">Cancelar</a>
+</form>
+
+<h2 style="margin-top:2rem;">Umbrales de alertas</h2>
+<form method="POST" class="form" style="max-width:600px;">
+    <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+    <label>Km para alerta ROJA de mantenimiento <input type="text" inputmode="decimal" name="alerta_km_rojo" value="{{ alert_settings.alerta_km_rojo }}"></label>
+    <label>Km para alerta AMARILLA de mantenimiento <input type="text" inputmode="decimal" name="alerta_km_amarillo" value="{{ alert_settings.alerta_km_amarillo }}"></label>
+    <label>Días antes de renovación (seguro/ITV/impuesto) <input type="number" name="alerta_dias_renovacion" min="1" value="{{ alert_settings.alerta_dias_renovacion }}"></label>
+    <button type="submit" class="btn">Guardar alertas</button>
+</form>
+{% endblock %}

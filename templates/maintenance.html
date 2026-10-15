@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Mantenimiento{% endblock %}
+{% block content %}
+<h1>Mantenimiento</h1>
+
+{% if alerts %}
+    <h2>Alertas activas</h2>
+    {% for a in alerts %}
+        <div class="alert alert-{{ a.status }}">{{ a.modelo }} · {{ a.nombre }}: {{ "%.0f"|format(a.km_restante) }} km restantes</div>
+    {% endfor %}
+{% endif %}
+
+<h2>Añadir item</h2>
+<form method="POST" class="form">
+    <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+    <label>Coche
+        <select name="car_id" required>
+            <option value="">Seleccionar</option>
+            {% for c in cars %}
+                <option value="{{ c.id }}">{{ c.matricula }} · {{ c.modelo }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    <label>Nombre <input type="text" name="nombre" required></label>
+    <label>Intervalo (km) <input type="text" inputmode="decimal" name="intervalo_km" required></label>
+    <label>Km ultimo <input type="text" inputmode="decimal" name="km_ultimo" value="0"></label>
+    <button type="submit" class="btn">Anadir</button>
+</form>
+
+<h2>Items por coche</h2>
+{% if items %}
+    <table class="table">
+        <thead><tr><th>Coche</th><th>Item</th><th>Intervalo</th><th>Km ultimo</th><th>Km actual</th><th>Restante</th><th></th></tr></thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td>{{ item.matricula }}</td>
+                <td>{{ item.nombre }}</td>
+                <td class="num">{{ "%.0f"|format(item.intervalo_km) }}</td>
+                <td class="num">{{ "%.0f"|format(item.km_ultimo) }}</td>
+                <td class="num">{{ "%.0f"|format(item.km_actual) }}</td>
+                <td class="num">{{ "%.0f"|format(item.km_restante) }}</td>
+                <td>
+                    <form method="POST" action="/mantenimiento/{{ item.id }}/editar" style="display:inline">
+    <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+                        <input type="hidden" name="nombre" value="{{ item.nombre }}">
+                        <input type="hidden" name="intervalo_km" value="{{ item.intervalo_km }}">
+                        <input type="hidden" name="km_ultimo" value="{{ item.km_actual }}">
+                        <button class="btn-sm">Reset</button>
+                    </form>
+                    <form method="POST" action="/mantenimiento/{{ item.id }}/eliminar" style="display:inline" onsubmit="return confirm('Eliminar item?')">
+    <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+                        <button class="btn-sm btn-danger">x</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p>Sin items de mantenimiento.</p>
+{% endif %}
+{% endblock %}

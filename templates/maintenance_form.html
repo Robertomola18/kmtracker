@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}{% if record %}Editar{% else %}Registro de{% endif %} Mantenimiento · {{ car.modelo }}{% endblock %}
+{% block content %}
+<h1>{% if record %}Editar Registro de Mantenimiento{% else %}Registro de Mantenimiento / Reparacion{% endif %}</h1>
+<p style="color: var(--text2); margin-bottom: 1.5rem;">{{ car.modelo }} {{ plate(car.matricula, car.pais) }}</p>
+
+<form method="POST" class="form" enctype="multipart/form-data" style="max-width: 600px;">
+    <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+    <label>Fecha <input type="date" name="fecha" value="{{ record.fecha if record else today }}"></label>
+    <label>Km actual <input type="text" inputmode="decimal" name="km" value="{{ "%.0f"|format(record.km if record else car.km_actual) }}"></label>
+    <label>Coste total (€) <input type="text" inputmode="decimal" name="coste" value="{{ record.coste if record and record.coste is not none else '' }}" placeholder="opcional"></label>
+    <label>Nota / Descripcion
+        <textarea name="nota" rows="3" placeholder="Describe el trabajo realizado, piezas cambiadas, observaciones..." style="width:100%;padding:0.5rem;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:0.95rem;margin-top:0.25rem;resize:vertical;font-family:inherit;">{{ record.nota if record else '' }}</textarea>
+    </label>
+
+    <h3 style="margin: 1rem 0 0.5rem;">Trabajos realizados</h3>
+    <p style="font-size:0.85rem;color:var(--text2);margin-bottom:0.75rem;">Marca los items que se han realizado en este servicio:</p>
+    {% for item in items %}
+    <label class="checkbox-label" style="margin-bottom:0.4rem;">
+        <input type="checkbox" name="items" value="{{ item.id }}" {% if record and item.id in selected_ids %}checked{% endif %}>
+        <span>{{ item.nombre }}</span>
+        <span style="font-size:0.75rem;color:var(--text2);margin-left:0.5rem;">
+            (intervalo {{ "%.0f"|format(item.intervalo_km) }} km ·
+            {% if item.km_restante <= 0 %}
+                <strong style="color:var(--danger);">VENCIDO</strong>
+            {% elif item.km_restante < 1000 %}
+                <span style="color:var(--warning);">{{ "%.0f"|format(item.km_restante) }} km restantes</span>
+            {% else %}
+                {{ "%.0f"|format(item.km_restante) }} km restantes
+            {% endif %})
+        </span>
+    </label>
+    {% endfor %}
+
+    {% if record %}
+    <h3 style="margin: 1rem 0 0.5rem;">Fotos</h3>
+    <p style="font-size:0.85rem;color:var(--text2);margin-bottom:0.75rem;">Las fotos existentes se conservan.</p>
+    {% else %}
+    <h3 style="margin: 1rem 0 0.5rem;">Fotos</h3>
+    <p style="font-size:0.85rem;color:var(--text2);margin-bottom:0.75rem;">Puedes adjuntar fotos de la factura, piezas cambiadas, o el estado del coche:</p>
+    <label>Factura <input type="file" name="factura" accept="image/*"></label>
+    <label>Piezas / Estado <input type="file" name="piezas" accept="image/*"></label>
+    <label>Foto adicional <input type="file" name="extra1" accept="image/*"></label>
+    <label>Foto adicional <input type="file" name="extra2" accept="image/*"></label>
+    {% endif %}
+
+    <div style="display:flex;gap:0.75rem;margin-top:1.5rem;">
+        <button type="submit" class="btn">{% if record %}Guardar cambios{% else %}Guardar registro{% endif %}</button>
+        <a href="/coche/{{ car.matricula | urlencode }}" class="btn btn-secondary">Cancelar</a>
+    </div>
+</form>
+{% endblock %}

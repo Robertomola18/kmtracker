@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}KMtracker{% endblock %}</title>
+    <link rel="icon" href="{{ url_for('static', filename='logo.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    {% block head_extra %}{% endblock %}
+</head>
+<body>
+    <div class="aurora" aria-hidden="true"></div>
+    <nav class="nav">
+        <div class="nav-inner">
+            <a class="nav-brand" href="/panel"><img src="{{ url_for('static', filename='logo.png') }}" alt="KMtracker" class="nav-logo"></a>
+            <button class="nav-toggle" id="navToggle" aria-label="Menu">&#8942;</button>
+            <div class="nav-links" id="navLinks">
+                <a href="/panel" {% if request.path == '/panel' %}class="active"{% endif %}>Panel</a>
+                <a href="/registrar" {% if request.path == '/registrar' %}class="active"{% endif %}>Registrar</a>
+                <a href="/registrar/km" {% if request.path.startswith('/registrar/km') %}class="active"{% endif %}>KM</a>
+                <a href="/combustible" {% if request.path == '/combustible' or request.path.startswith('/combustible/') %}class="active"{% endif %}>Combustible</a>
+                <a href="/mantenimiento" {% if request.path == '/mantenimiento' or request.path.startswith('/mantenimiento/') %}class="active"{% endif %}>Mantenimiento</a>
+                <a href="/coches" {% if request.path == '/coches' %}class="active"{% endif %}>Coches</a>
+                <a href="/informes" {% if request.path == '/informes' %}class="active"{% endif %}>Informes</a>
+                <a href="/historial" {% if request.path == '/historial' %}class="active"{% endif %}>Historial</a>
+                <a href="/settings" {% if request.path == '/settings' %}class="active"{% endif %}>Ajustes</a>
+                <a href="/admin" {% if request.path == '/admin' %}class="active"{% endif %}>Admin</a>
+                {% if session.autenticado %}
+                    <form method="POST" action="/logout" style="display:inline">
+                        <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+                        <button type="submit" class="nav-logout">Salir</button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, msg in messages %}
+                    <div class="flash flash-{{ category }}">{{ msg }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <span>KMtracker · Creado por Rober Da Silva (DjGuesh) · Rsilva Corp Limited · software libre bajo AGPL-3.0</span>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('navToggle').addEventListener('click', function() {
+            document.getElementById('navLinks').classList.toggle('nav-open');
+        });
+    </script>
+</body>
+</html>

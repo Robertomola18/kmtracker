@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+venv/
+.venv/
+.env
+.git
+.gitignore
+*.md
+tests/
+kmtracker.db
+kmtracker.db-wal
+kmtracker.db-shm
+.secret_key
+static/uploads/
+backups/

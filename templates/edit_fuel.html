@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Editar repostaje{% endblock %}
+{% block content %}
+<h1>Editar repostaje</h1>
+<p style="color: var(--text2); margin-bottom: 1.5rem;">{{ car.modelo }} {{ plate(car.matricula, car.pais) }}</p>
+<form method="POST" class="form" style="max-width: 500px;">
+    <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+    <label>Fecha <input type="date" name="fecha" value="{{ fuel.fecha }}"></label>
+    <label>Litros <input type="text" inputmode="decimal" name="litros" value="{{ fuel.litros }}" required></label>
+    <label>Precio por litro (€) <input type="text" inputmode="decimal" name="precio_litro" value="{{ fuel.precio_litro }}" required></label>
+    <label>Km total (odometro) <input type="text" inputmode="decimal" name="km_lectura" value="{{ fuel.km_lectura if fuel.km_lectura is not none else '' }}" placeholder="opcional"></label>
+    <label>Tipo
+        <select name="tipo_combustible">
+            <option value="gasolina" {% if fuel.tipo_combustible == 'gasolina' %}selected{% endif %}>Gasolina</option>
+            <option value="diesel" {% if fuel.tipo_combustible == 'diesel' %}selected{% endif %}>Diesel</option>
+        </select>
+    </label>
+    <label class="checkbox-label">
+        <input type="checkbox" name="tanque_lleno" {% if fuel.tanque_lleno %}checked{% endif %}> Tanque lleno
+    </label>
+    <label>Nota <input type="text" name="nota" value="{{ fuel.nota or '' }}" placeholder="opcional"></label>
+    <div style="display:flex;gap:0.75rem;margin-top:1.5rem;">
+        <button type="submit" class="btn">Guardar</button>
+        <a href="/coche/{{ car.matricula | urlencode }}" class="btn btn-secondary">Cancelar</a>
+    </div>
+</form>
+{% endblock %}

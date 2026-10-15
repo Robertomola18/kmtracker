@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Informes{% endblock %}
+{% block content %}
+<h1>Informes</h1>
+
+<form method="GET" class="form-inline" style="flex-wrap:wrap; gap:0.5rem;">
+    <label>Coche
+        <select name="car_id">
+            <option value="">Todos</option>
+            {% for c in cars %}
+                <option value="{{ c.id }}" {% if selected_car_id == c.id %}selected{% endif %}>{{ c.matricula }} · {{ c.modelo }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    <label>Agrupar por
+        <select name="group_by" onchange="this.form.submit()">
+            <option value="car" {% if group_by == 'car' %}selected{% endif %}>Coche (totales)</option>
+            <option value="car_month" {% if group_by == 'car_month' %}selected{% endif %}>Coche y mes</option>
+        </select>
+    </label>
+    <label>Meses (Ctrl para varios)
+        <select name="months" multiple size="6" required>
+            {% for m in available_months %}
+                <option value="{{ m }}" {% if m in months %}selected{% endif %}>{{ m }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    <button type="submit" class="btn">Filtrar</button>
+    {% if report %}
+        <a href="/informes/export.csv?car_id={{ selected_car_id or '' }}&group_by={{ group_by }}&{% for m in months %}months={{ m }}&{% endfor %}" class="btn" style="margin-left:5px;">⬇ Exportar CSV</a>
+    {% endif %}
+</form>
+
+{% if excluidos %}
+    <p class="hint">
+        No aparecen en el selector los coches de prueba y los ya vendidos
+        ({{ excluidos }}). Siguen contando sus gastos anteriores a la baja y puedes
+        consultarlos desde la ficha de cada coche.
+    </p>
+{% endif %}
+
+{% if report %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Coche</th><th>Matricula</th><th>Periodo</th>
+                <th>Km</th><th>Litros</th><th>Repostajes</th>
+                <th>Combustible</th><th>Gastos</th><th>Mantenimiento</th>
+                <th>Total</th><th>Consumo L/100km</th><th>EUR/km</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% set total_km = [0] %}
+            {% set total_litros = [0] %}
+            {% set total_rep = [0] %}
+            {% set total_fuel = [0] %}
+            {% set total_exp = [0] %}
+            {% set total_maint = [0] %}
+            {% set total_total = [0] %}
+            {% for r in report %}
+            <tr>
+                <td>{{ r.modelo }}</td>
+                <td class="num">{{ r.matricula }}</td>
+                <td>{{ r.ym }}</td>
+                <td class="num">{{ "%.0f"|format(r.km) }}</td>
+                <td>{{ "%.1f"|format(r.litros) }}</td>
+                <td class="num">{{ r.n_rep }}</td>
+                <td class="num">{{ "%.2f"|format(r.fuel) }} EUR</td>
+                <td class="num">{{ "%.2f"|format(r.expenses) }} EUR</td>
+                <td>{{ "%.2f"|format(r.maintenance) }} EUR</td>
+                <td><strong>{{ "%.2f"|format(r.total) }} EUR</strong></td>
+                <td>{{ "%.2f"|format(r.consumo) if r.consumo is not none else '-' }}</td>
+                <td class="num">{{ "%.4f"|format(r.eur_km) if r.eur_km is not none else '-' }}</td>
+            </tr>
+            {% if total_km.append(total_km.pop() + r.km) %}{% endif %}
+            {% if total_litros.append(total_litros.pop() + r.litros) %}{% endif %}
+            {% if total_rep.append(total_rep.pop() + r.n_rep) %}{% endif %}
+            {% if total_fuel.append(total_fuel.pop() + r.fuel) %}{% endif %}
+            {% if total_exp.append(total_exp.pop() + r.expenses) %}{% endif %}
+            {% if total_maint.append(total_maint.pop() + r.maintenance) %}{% endif %}
+            {% if total_total.append(total_total.pop() + r.total) %}{% endif %}
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr class="total-row">
+                <td><strong>Total</strong></td><td></td><td></td>
+                <td class="num"><strong>{{ "%.0f"|format(total_km[0]) }}</strong></td>
+                <td><strong>{{ "%.1f"|format(total_litros[0]) }}</strong></td>
+                <td class="num"><strong>{{ total_rep[0] }}</strong></td>
+                <td><strong>{{ "%.2f"|format(total_fuel[0]) }}</strong></td>
+                <td class="num"><strong>{{ "%.2f"|format(total_exp[0]) }}</strong></td>
+                <td class="num"><strong>{{ "%.2f"|format(total_maint[0]) }}</strong></td>
+                <td class="num"><strong>{{ "%.2f"|format(total_total[0]) }} EUR</strong></td>
+                <td></td><td></td>
+            </tr>
+        </tfoot>
+    </table>
+{% else %}
+    <p>Sin datos para este periodo.</p>
+{% endif %}
+{% endblock %}

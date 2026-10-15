@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Documentación {{ car.modelo }}{% endblock %}
+{% block content %}
+<h1>Documentación · {{ car.modelo }} {{ plate(car.matricula, car.pais) }}</h1>
+<p style="color:var(--text2);margin-bottom:1.5rem;">Guarda aquí fichas técnicas, presiones de ruedas, manuales, ITV... Cada documento con un título que tú elijas.</p>
+
+<h2>Subir documento</h2>
+<form method="POST" action="/coche/{{ car.matricula | urlencode }}/documentos/nuevo" class="form" enctype="multipart/form-data">
+    <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+    <label>Título <input type="text" name="titulo" required placeholder="Ej: Ficha técnica, Presión de ruedas..."></label>
+    <label class="checkbox-label">
+        <input type="file" name="archivo" required> Archivo (imagen jpg/png/gif/webp o PDF)
+    </label>
+    <button type="submit" class="btn">Subir documento</button>
+</form>
+
+<h2>Documentos guardados</h2>
+{% if docs %}
+    <div class="hub-grid">
+        {% for d in docs %}
+        <div class="hub-card" style="flex-direction:column;align-items:stretch;">
+            {% set lower = d.filename|lower %}
+            {% if lower.endswith('.pdf') %}
+            <div class="hub-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#0abc8c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 15h4"/><path d="M8 11h.01"/><path d="M8 15h.01"/></svg></div>
+            {% else %}
+            <img src="/documento/{{ d.id }}" alt="{{ d.titulo }}" class="doc-thumb">
+            {% endif %}
+            <div class="hub-title">{{ d.titulo }}</div>
+            <div class="hub-desc">{{ d.created_at[:10] if d.created_at else '' }}</div>
+            <div style="display:flex;gap:0.4rem;justify-content:center;margin-top:0.5rem;">
+                <a href="/documento/{{ d.id }}" target="_blank" class="btn-sm">Abrir</a>
+                <form method="POST" action="/coche/{{ car.matricula | urlencode }}/documentos/{{ d.id }}/eliminar" onsubmit="return confirm('Eliminar este documento?')" style="display:inline;">
+    <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+                    <button class="btn-sm btn-danger">✕</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <p style="color:var(--text2);">Todavía no hay documentos para este coche.</p>
+{% endif %}
+
+<p style="margin-top:1.5rem;"><a href="/coche/{{ car.matricula | urlencode }}" class="btn-sm">← Volver al coche</a></p>
+{% endblock %}

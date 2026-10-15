@@ -1,0 +1,20 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+venv/
+.venv/
+
+# Secretos y datos
+.env
+.secret_key
+*.db
+*.db-wal
+*.db-shm
+*.db.bak
+static/uploads/
+backups/
+
+# Basura
+*.7z
+*.bak
+.DS_Store

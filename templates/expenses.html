@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}Gastos {{ car.modelo }}{% endblock %}
+{% block content %}
+<h1>Gastos · {{ car.modelo }} {{ plate(car.matricula, car.pais) }}</h1>
+
+{% if editing %}
+<h2>Editar gasto</h2>
+<form method="POST" class="form" enctype="multipart/form-data">
+    <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+    <label>Concepto <input type="text" name="concepto" required value="{{ editing.concepto }}"></label>
+    <label>Coste (€) <input type="text" inputmode="decimal" name="coste" required value="{{ editing.coste }}"></label>
+    <label>Categoria
+        <select name="categoria">
+            <option value="seguro" {% if editing.categoria == 'seguro' %}selected{% endif %}>Seguro</option>
+            <option value="itv" {% if editing.categoria == 'itv' %}selected{% endif %}>ITV</option>
+            <option value="impuesto" {% if editing.categoria == 'impuesto' %}selected{% endif %}>Impuesto circulacion</option>
+            <option value="reparacion" {% if editing.categoria == 'reparacion' %}selected{% endif %}>Reparacion / Taller</option>
+            <option value="limpieza" {% if editing.categoria == 'limpieza' %}selected{% endif %}>Limpieza</option>
+            <option value="mejoras" {% if editing.categoria == 'mejoras' %}selected{% endif %}>Mejoras</option>
+            <option value="otro" {% if editing.categoria == 'otro' %}selected{% endif %}>Otro</option>
+        </select>
+    </label>
+    <label>Fecha <input type="date" name="fecha" value="{{ editing.fecha }}"></label>
+    <label>Km lectura <input type="text" inputmode="decimal" name="km_lectura" value="{{ editing.km_lectura if editing.km_lectura is not none else '' }}" placeholder="opcional"></label>
+    <label>Nota <input type="text" name="nota" value="{{ editing.nota or '' }}" placeholder="opcional"></label>
+    <label class="checkbox-label" style="margin-top:0.5rem;">
+        <input type="file" name="foto" accept="image/*" multiple> Adjuntar más facturas (opcional)
+    </label>
+    <div style="display:flex;gap:0.75rem;margin-top:1rem;">
+        <button type="submit" class="btn">Guardar cambios</button>
+        <a href="/coche/{{ car.matricula | urlencode }}/gastos" class="btn btn-secondary">Cancelar</a>
+    </div>
+</form>
+{% if editing.fotos_db %}
+<div style="margin-top:1rem;">
+    <strong>Fotos actuales:</strong>
+    <div style="display:flex;gap:0.5rem;margin-top:0.4rem;flex-wrap:wrap;">
+        {% for f in editing.fotos_db %}
+        <div style="text-align:center;">
+            <a href="/expense_photo/{{ f.id }}" target="_blank"><img src="/expense_photo/{{ f.id }}" alt="Factura" class="factura-thumb"></a>
+            <form method="POST" action="/expense_photo/{{ f.id }}/delete" onsubmit="return confirm('Eliminar esta foto?')" style="margin-top:0.2rem;">
+    <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+                <button class="btn-sm btn-danger">x</button>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% else %}
+<h2>Registrar gasto</h2>
+<form method="POST" class="form" enctype="multipart/form-data">
+    <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+    <label>Concepto <input type="text" name="concepto" required placeholder="Seguro anual, ITV, reparacion..."></label>
+    <label>Coste (€) <input type="text" inputmode="decimal" name="coste" required></label>
+    <label>Categoria
+        <select name="categoria">
+            <option value="seguro">Seguro</option>
+            <option value="itv">ITV</option>
+            <option value="impuesto">Impuesto circulacion</option>
+            <option value="reparacion">Reparacion / Taller</option>
+            <option value="limpieza">Limpieza</option>
+            <option value="mejoras">Mejoras</option>
+            <option value="otro">Otro</option>
+        </select>
+    </label>
+    <label>Fecha <input type="date" name="fecha" value="{{ '' | default('', true) }}"></label>
+    <label>Km lectura <input type="text" inputmode="decimal" name="km_lectura" placeholder="opcional"></label>
+    <label>Nota <input type="text" name="nota" placeholder="opcional"></label>
+    <label class="checkbox-label">
+        <input type="file" name="foto" accept="image/*" multiple> Adjuntar facturas (opcional, múltiples)
+    </label>
+    <button type="submit" class="btn">Registrar gasto</button>
+</form>
+{% endif %}
+
+<h2>Historial de gastos
+    <span class="section-actions">
+        <a href="/coche/{{ car.matricula | urlencode }}/export/expenses.csv" class="btn-sm">⬇ Exportar</a>
+    </span>
+</h2>
+{% if expenses %}
+    <table class="table">
+        <thead><tr><th>Fecha</th><th>Concepto</th><th>Categoria</th><th>Coste</th><th>Nota</th><th>Factura</th><th></th></tr></thead>
+        <tbody>
+            {% set total = [0] %}
+            {% for e in expenses %}
+            <tr>
+                <td>{{ e.fecha }}</td>
+                <td>{{ e.concepto }}</td>
+                <td>{{ e.categoria }}</td>
+                <td class="num">{{ "%.2f"|format(e.coste) }} €</td>
+                <td class="num">{{ e.nota or '' }}</td>
+                <td>
+                    {% if e.fotos_db %}
+                        {% for f in e.fotos_db %}
+                            <a href="/expense_photo/{{ f.id }}" target="_blank"><img src="/expense_photo/{{ f.id }}" alt="Factura" class="factura-thumb"></a>
+                        {% endfor %}
+                    {% elif e.fotos_list %}
+                        {% for f in e.fotos_list %}
+                            <a href="/static/{{ f }}" target="_blank"><img src="/static/{{ f }}" alt="Factura" class="factura-thumb"></a>
+                        {% endfor %}
+                    {% endif %}
+                </td>
+                <td>
+                    <div class="row-actions">
+                        <a href="/coche/{{ car.matricula | urlencode }}/gastos/{{ e.id }}/editar" class="btn-sm" title="Editar">✏️</a>
+                        <form method="POST" action="/api/expenses/{{ e.id }}/delete" onsubmit="return confirm('Eliminar gasto?')">
+    <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+                            <button class="btn-sm btn-danger" title="Eliminar">Eliminar</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% if total.append(total.pop() + e.coste) %}{% endif %}
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr class="total-row"><td colspan="3"><strong>Total</strong></td><td><strong>{{ "%.2f"|format(total[0]) }} €</strong></td><td colspan="3"></td></tr>
+        </tfoot>
+    </table>
+{% else %}
+    <p>Sin gastos registrados.</p>
+{% endif %}
+<p><a href="/coche/{{ car.matricula | urlencode }}">Volver a {{ car.modelo }}</a></p>
+{% endblock %}

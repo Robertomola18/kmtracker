@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Combustible{% endblock %}
+{% block content %}
+<h1>Registrar repostaje</h1>
+<form method="POST" class="form">
+    <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+    <label>Coche
+        <select name="car_id" required>
+            <option value="">Seleccionar coche</option>
+            {% for c in cars %}
+                <option value="{{ c.id }}">{{ c.matricula }} · {{ c.modelo }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    <label>Fecha <input type="date" name="fecha" value="{{ '' | default('', true) }}"></label>
+    <label>Litros <input type="text" inputmode="decimal" name="litros" required></label>
+    <label>Precio por litro (€) <input type="text" inputmode="decimal" name="precio_litro" required></label>
+    <label>Km total (odometro) <input type="text" inputmode="decimal" name="km_lectura" placeholder="opcional"></label>
+    <label>Tipo
+        <select name="tipo_combustible">
+            <option value="gasolina">Gasolina</option>
+            <option value="diesel">Diesel</option>
+        </select>
+    </label>
+    <label class="checkbox-label">
+        <input type="checkbox" name="tanque_lleno"> Tanque lleno
+    </label>
+    <label>Nota <input type="text" name="nota" placeholder="opcional"></label>
+    <button type="submit" class="btn">Registrar</button>
+</form>
+
+<h2>Historial de repostajes</h2>
+{% if fuel_entries %}
+    <table class="table">
+        <thead><tr><th>Fecha</th><th>Coche</th><th>Litros</th><th>Precio/L</th><th>Total</th><th>Km</th><th>Tipo</th><th>Lleno</th><th>Nota</th></tr></thead>
+        <tbody>
+            {% for f in fuel_entries %}
+            <tr>
+                <td>{{ f.fecha }}</td>
+                <td>{{ f.matricula }}</td>
+                <td class="num">{{ f.litros }}</td>
+                <td class="num">{{ "%.3f"|format(f.precio_litro) }}</td>
+                <td class="num">{{ "%.2f"|format(f.total_gasto) }}</td>
+                <td class="num">{{ "%.0f"|format(f.km_lectura) if f.km_lectura else '' }}</td>
+                <td class="num">{{ f.tipo_combustible }}</td>
+                <td class="num">{{ 'Si' if f.tanque_lleno else 'No' }}</td>
+                <td class="num">{{ f.nota or '' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p>Sin repostajes registrados.</p>
+{% endif %}
+<p><a href="/combustible/precios">Ver grafico de precios</a></p>
+{% endblock %}

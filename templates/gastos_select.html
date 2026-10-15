@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Registrar Gasto{% endblock %}
+{% block content %}
+<h1>¿Que coche?</h1>
+<p style="color:var(--text2);margin-bottom:1.5rem;">Selecciona el coche para registrar un gasto:</p>
+
+<div class="hub-grid">
+    {% for c in cars %}
+    <a href="/coche/{{ c.matricula | urlencode }}/gastos" class="hub-card">
+        <div class="hub-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#0abc8c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M14.8 9.2A3.5 3.5 0 0 0 12 8c-1.1 0-2 .7-2 1.6 0 2 4 1.2 4 3.2 0 .9-.9 1.6-2 1.6a3.5 3.5 0 0 1-2.8-1.2"/><path d="M12 7v10"/></svg></div>
+        <div class="hub-title">{{ c.modelo }}</div>
+        <div class="hub-desc">{{ c.matricula }} · {{ "%.0f"|format(c.km_actual) }} km</div>
+    </a>
+    {% endfor %}
+</div>
+{% endblock %}

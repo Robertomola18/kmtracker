@@ -1,0 +1,50 @@
+services:
+  kmtracker:
+    build: .
+    image: kmtracker:latest
+    container_name: kmtracker
+    restart: unless-stopped
+    ports:
+      - "5050:5050"
+    environment:
+      - KMTRACKER_DB_PATH=/data/kmtracker.db
+      - KMTRACKER_PASSWORD=${KMTRACKER_PASSWORD:-}
+      - TZ=${TZ:-Europe/Madrid}
+      - KM_BACKUP_KEEP_COUNT=${KM_BACKUP_KEEP_COUNT:-10}
+      - KM_BACKUP_KEEP_DAYS=${KM_BACKUP_KEEP_DAYS:-30}
+    volumes:
+      - kmtracker_data:/data
+      - kmtracker_uploads:/app/static/uploads
+    mem_limit: 384m
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Bot de Telegram opcional: arrancalo con  docker compose --profile bot up -d
+  bot:
+    image: kmtracker:latest
+    container_name: kmtracker_bot
+    restart: unless-stopped
+    profiles: ["bot"]
+    entrypoint: ["python3", "/app/bot.py"]
+    depends_on:
+      - kmtracker
+    environment:
+      - KMTRACKER_DB_PATH=/data/kmtracker.db
+      - TELEGRAM_TOKEN=${TELEGRAM_TOKEN:-}
+      - TELEGRAM_ALLOWED_USER_IDS=${TELEGRAM_ALLOWED_USER_IDS:-}
+      - TZ=${TZ:-Europe/Madrid}
+    volumes:
+      - kmtracker_data:/data
+    mem_limit: 256m
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  kmtracker_data:
+  kmtracker_uploads:

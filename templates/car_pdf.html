@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ car.modelo }} - Informe</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1.2cm;
+            @bottom-center {
+                content: "KMtracker · " counter(page) " / " counter(pages);
+                font-size: 8pt;
+                color: #999;
+            }
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'DejaVu Sans', Arial, sans-serif;
+            color: #333;
+            font-size: 10pt;
+            margin: 0;
+            line-height: 1.4;
+        }
+        .car-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 3px solid #0abc8c;
+            padding-bottom: 10px;
+            margin-bottom: 12px;
+        }
+        .car-photo { width: 70px; height: 70px; object-fit: cover; border-radius: 8px; }
+        .car-header h1 { margin: 0; font-size: 16pt; }
+        .car-header p { margin: 2px 0; color: #555; font-size: 9.5pt; }
+        .plate-badge {
+            display: inline-block;
+            border: 2px solid #333;
+            border-radius: 4px;
+            padding: 3px 8px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            background: #fff;
+        }
+        .stats-bar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+        .stat {
+            background: #f4f6f8;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 6px 12px;
+            min-width: 110px;
+        }
+        .stat-label { display: block; font-size: 7.5pt; text-transform: uppercase; color: #777; }
+        .stat-value { font-size: 11pt; font-weight: bold; color: #0abc8c; }
+        h2 {
+            font-size: 11pt;
+            color: #fff;
+            background: #375a7f;
+            border-radius: 4px;
+            padding: 5px 10px;
+            margin: 16px 0 8px;
+            page-break-after: avoid;
+        }
+        .section-summary { font-size: 8.5pt; color: #666; margin: 4px 0 6px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 8px; page-break-inside: auto; }
+        thead { display: table-header-group; }
+        tr { page-break-inside: avoid; }
+        th {
+            background: #e8ecf1;
+            text-align: left;
+            font-size: 8pt;
+            padding: 4px 6px;
+            border: 1px solid #ccc;
+        }
+        td { font-size: 8.5pt; padding: 3px 6px; border: 1px solid #ddd; }
+        tr.total-row td { background: #eef9f5; font-weight: bold; }
+        .row-danger td { background: #fdecea; }
+        .row-warn td { background: #fff8e6; }
+        .mtto-record {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 8px;
+            margin-bottom: 8px;
+            page-break-inside: avoid;
+        }
+        .mtto-record strong { color: #375a7f; }
+        .mtto-note { font-size: 8.5pt; color: #555; font-style: italic; margin-top: 3px; }
+        .mtto-items { font-size: 8.5pt; color: #333; margin-top: 3px; }
+        .mtto-fotos img { width: 52px; height: 40px; object-fit: cover; border-radius: 4px; margin-right: 4px; }
+        .footer-note { margin-top: 16px; font-size: 8pt; color: #999; text-align: center; border-top: 1px solid #ddd; padding-top: 6px; }
+        .no-data { color: #999; font-size: 9pt; font-style: italic; }
+        .meta-line { font-size: 8pt; color: #666; margin-top: 2px; }
+        .renewal-item { font-size: 8.5pt; padding: 2px 0; }
+        .renewal-ok { color: #2e7d32; }
+        .renewal-warn { color: #e65100; }
+        .renewal-bad { color: #c62828; font-weight: bold; }
+        .cat-grid { width: 100%; }
+        .cat-cell {
+            display: inline-block;
+            width: 48%;
+            background: #f4f6f8;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 6px 10px;
+            margin: 0 1% 6px 0;
+        }
+        .cat-label { display: block; font-size: 7.5pt; text-transform: uppercase; color: #777; }
+        .cat-value { font-size: 10.5pt; font-weight: bold; color: #375a7f; }
+        .nota-inline { font-size: 7.5pt; color: #777; font-style: italic; white-space: normal; }
+    </style>
+</head>
+<body>
+    <div class="car-header">
+        {% if car.foto_data_uri %}
+            <img src="{{ car.foto_data_uri }}" class="car-photo">
+        {% endif %}
+        <span class="plate-badge">{{ car.matricula }}</span>
+        <div>
+            <h1>{{ car.modelo }} ({{ car.anyo }})</h1>
+            <p>Modo: {{ car.modo }} | Total: {{ "%.0f"|format(car.km_actual) }} km</p>
+            {% if car.motor or car.bastidor %}
+            <p>
+                {% if car.motor %}Motor: {{ car.motor }} · {% endif %}
+                {% if car.bastidor %}VIN: {{ car.bastidor }}{% endif %}
+            </p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="stats-bar">
+        <div class="stat"><span class="stat-label">Este mes</span><span class="stat-value">{{ "%.0f"|format(km_mes) }} km</span></div>
+        {% if consumo %}<div class="stat"><span class="stat-label">Consumo</span><span class="stat-value">{{ consumo }} L/100km</span></div>{% endif %}
+        <div class="stat"><span class="stat-label">Gasto mes</span><span class="stat-value">{{ "%.2f"|format(gasto_mes) }} EUR</span></div>
+        <div class="stat"><span class="stat-label">Gasto año</span><span class="stat-value">{{ "%.2f"|format(gasto_anual) }} EUR{% if gasto_anual_ant %} / {{ "%.2f"|format(gasto_anual_ant) }} EUR{% endif %}</span></div>
+        {% if eur_km %}<div class="stat"><span class="stat-label">Coste total/km</span><span class="stat-value">{{ "%.4f"|format(eur_km) }} EUR/km</span></div>{% endif %}
+        <div class="stat"><span class="stat-label">Gasto total</span><span class="stat-value">{{ "%.2f"|format(total_expenses) }} EUR</span></div>
+    </div>
+
+    {% if renewals %}
+    <h2>Renovaciones</h2>
+    {% for r in renewals %}
+        <div class="renewal-item {% if r.dias_restantes < 0 %}renewal-bad{% elif r.dias_restantes <= 45 %}renewal-warn{% else %}renewal-ok{% endif %}">
+            <strong>{{ r.tipo }}</strong> · vence {{ r.fecha }}
+            {% if r.dias_restantes < 0 %} · VENCIDO hace {{ (-r.dias_restantes) }} dias
+            {% else %} · {{ r.dias_restantes }} dias restantes{% endif %}
+        </div>
+    {% endfor %}
+    {% endif %}
+
+    <h2>Viajes</h2>
+    {% if entries %}
+        {% set total_km = namespace(val=0) %}
+        {% for e in entries %}{% set total_km.val = total_km.val + (e.km_calculados or 0) %}{% endfor %}
+        <p class="section-summary">{{ entries|length }} registros · {{ "%.0f"|format(total_km.val) }} km totales</p>
+        <table>
+            <thead><tr><th>Fecha</th><th>Tipo</th><th>Lectura</th><th>Km</th><th>Acumulado</th><th>Reset</th><th>Nota</th></tr></thead>
+            <tbody>
+                {% for e in entries %}
+                <tr>
+                    <td>{{ e.fecha }}</td><td>{{ e.tipo }}</td>
+                    <td>{{ "%.1f"|format(e.lectura) }}</td>
+                    <td>{{ "%.1f"|format(e.km_calculados) }}</td>
+                    <td>{{ "%.1f"|format(e.km_acumulado) }}</td>
+                    <td>{{ 'Si' if e.is_reset else 'No' }}</td>
+                    <td>{{ e.nota or '' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="no-data">Sin viajes registrados.</p>
+    {% endif %}
+
+    <h2>Combustible</h2>
+    {% if fuel_entries %}
+        {% set total_litros = namespace(val=0) %}
+        {% set total_gasto_comb = namespace(val=0) %}
+        {% for f in fuel_entries %}
+            {% set total_litros.val = total_litros.val + (f.litros or 0) %}
+            {% set total_gasto_comb.val = total_gasto_comb.val + (f.total_gasto or 0) %}
+        {% endfor %}
+        <p class="section-summary">{{ fuel_entries|length }} repostajes · {{ "%.2f"|format(total_litros.val) }} L · {{ "%.2f"|format(total_gasto_comb.val) }} EUR total</p>
+        <table>
+            <thead><tr><th>Fecha</th><th>Litros</th><th>Precio/L</th><th>Total</th><th>Km lectura</th><th>Tipo</th><th>Lleno</th><th>Nota</th></tr></thead>
+            <tbody>
+                {% for f in fuel_entries %}
+                <tr>
+                    <td>{{ f.fecha }}</td><td>{{ f.litros }}</td><td>{{ f.precio_litro }}</td>
+                    <td>{{ "%.2f"|format(f.total_gasto) }}</td>
+                    <td>{{ "%.0f"|format(f.km_lectura) if f.km_lectura else '' }}</td>
+                    <td>{{ f.tipo_combustible }}</td>
+                    <td>{{ 'Si' if f.tanque_lleno else 'No' }}</td>
+                    <td>{{ f.nota or '' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="no-data">Sin repostajes registrados.</p>
+    {% endif %}
+
+    <h2>Mantenimiento</h2>
+    {% if items %}
+        {% set vencidos = items | selectattr('km_restante', '<=', 0) | list %}
+        {% set pendientes = items | rejectattr('km_restante', '<=', 0) | list %}
+        <p class="section-summary">
+            {{ items|length }} items · {% if vencidos %}<strong>{{ vencidos|length }} vencidos</strong> · {% endif %}
+            {% if pendientes %}proximo: {{ pendientes[0].nombre }} ({{ "%.0f"|format(pendientes[0].km_restante) }} km){% endif %}
+        </p>
+        <table>
+            <thead><tr><th>Item</th><th>Intervalo</th><th>Ultimo km</th><th>Restante</th></tr></thead>
+            <tbody>
+                {% for item in items %}
+                <tr class="{% if item.km_restante <= 0 %}row-danger{% elif item.km_restante < 1000 %}row-warn{% endif %}">
+                    <td>{{ item.nombre }}</td>
+                    <td>{{ "%.0f"|format(item.intervalo_km) }} km</td>
+                    <td>{{ "%.0f"|format(item.km_ultimo) }} km</td>
+                    <td>{{ "%.0f"|format(item.km_restante) }} km</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="no-data">Sin items de mantenimiento.</p>
+    {% endif %}
+
+    {% if mtto_records %}
+        <h2>Historial de mantenimiento</h2>
+        {% for r in mtto_records %}
+        <div class="mtto-record">
+            <div>
+                <strong>{{ r.fecha }}</strong> · km {{ "%.0f"|format(r.km) }}
+                {% if r.coste %} · <strong>{{ "%.2f"|format(r.coste) }} EUR</strong>{% endif %}
+            </div>
+            {% if r.items_realizados %}
+            <div class="mtto-items">{{ r.items_realizados }}</div>
+            {% endif %}
+            {% if r.nota %}
+            <div class="mtto-note">{{ r.nota }}</div>
+            {% endif %}
+            {% if r.fotos %}
+            <div class="mtto-fotos" style="margin-top:4px;">
+                {% for foto in r.fotos %}
+                {% if foto.data_uri %}<img src="{{ foto.data_uri }}">{% endif %}
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <h2>Gastos</h2>
+    {% if expenses %}
+        <p class="section-summary">{{ expenses|length }} gastos · {{ "%.2f"|format(total_expenses) }} EUR total</p>
+        <table>
+            <thead><tr><th>Fecha</th><th>Concepto</th><th>Categoria</th><th>Coste</th></tr></thead>
+            <tbody>
+                {% for e in expenses %}
+                <tr>
+                    <td>{{ e.fecha }}</td>
+                    <td>{{ e.concepto }}
+                        {% if e.nota %}<div class="nota-inline">{{ e.nota }}</div>{% endif %}
+                    </td>
+                    <td>{{ e.categoria }}</td>
+                    <td>{{ "%.2f"|format(e.coste) }} EUR</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if cat_totals %}
+        <h2 style="background:#375a7f;margin-top:10px;">Gastos por categoria</h2>
+        <div class="cat-grid">
+            {% for cat, total in cat_totals.items() %}
+            <div class="cat-cell">
+                <span class="cat-label">{{ cat }}</span>
+                <span class="cat-value">{{ "%.2f"|format(total) }} EUR</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    {% else %}
+        <p class="no-data">Sin gastos registrados.</p>
+    {% endif %}
+
+    <div class="footer-note">Generado el {{ date }} por KMtracker · Creado por Rober Da Silva (DjGuesh) · Rsilva Corp Limited</div>
+</body>
+</html>

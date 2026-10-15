@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}Gestionar coches{% endblock %}
+{% block content %}
+<h1>Gestionar coches</h1>
+
+{% if edit %}
+    <h2>Editar {{ edit.modelo }}</h2>
+    <form method="POST" class="form">
+    <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+        <input type="hidden" name="_method" value="put">
+        <label>Matricula <input type="text" name="matricula" value="{{ edit.matricula }}" required></label>
+        <label>Modelo <input type="text" name="modelo" value="{{ edit.modelo }}" required></label>
+        <label>Anyo <input type="number" name="anyo" value="{{ edit.anyo }}" required></label>
+        <label>Pais
+            <select name="pais">
+                <option value="es" {% if edit.pais == 'es' %}selected{% endif %}>Espana</option>
+                <option value="pt" {% if edit.pais == 'pt' %}selected{% endif %}>Portugal</option>
+                <option value="moto_es" {% if edit.pais == 'moto_es' %}selected{% endif %}>Moto-Espana</option>
+                <option value="moto_pt" {% if edit.pais == 'moto_pt' %}selected{% endif %}>Moto-Portugal</option>
+            </select>
+        </label>
+        <label>Modo
+            <select name="modo">
+                <option value="partial" {% if edit.modo == 'partial' %}selected{% endif %}>Parcial</option>
+                <option value="total" {% if edit.modo == 'total' %}selected{% endif %}>Total</option>
+            </select>
+        </label>
+        <label>Km inicial <input type="text" inputmode="decimal" name="km_inicial" value="{{ edit.km_inicial }}"></label>
+        <label>Km actual <input type="text" inputmode="decimal" name="km_actual" value="{{ edit.km_actual }}"></label>
+        <label>Variacion Kilometraje (%) <input type="number" name="desv_km" step="0.1" min="0" max="100" value="{{ edit.desv_km or 100 }}"></label>
+        <p class="hint">Ej: 78,4 si el cuentakilometros marca menos de lo real (100 contador = 127,55 reales). Afecta solo al consumo.</p>
+        <label>Motor <input type="text" name="motor" value="{{ edit.motor or '' }}" placeholder="Ej: 2.0 TDI"></label>
+        <label>Bastidor (VIN) <input type="text" name="bastidor" value="{{ edit.bastidor or '' }}" placeholder="Ej: VSSZZZ..."></label>
+        <label class="checkbox-label">
+            <input type="checkbox" name="es_prueba" {% if edit.es_prueba %}checked{% endif %}> Excluir de las estadisticas (coche de prueba)
+        </label>
+
+        <label>Fecha de baja (venta) <input type="date" name="fecha_baja" value="{{ edit.fecha_baja or '' }}">
+            <span class="hint">Dejalo vacio si el coche sigue en servicio. Los gastos anteriores a esa fecha siguen contando; los posteriores, no.</span>
+        </label>
+
+        <h3>Fechas de renovacion (opcional)</h3>
+        <label>Seguro vence <input type="date" name="seguro_fecha" value="{{ edit.seguro_fecha or '' }}"></label>
+        <label>ITV vence <input type="date" name="itv_fecha" value="{{ edit.itv_fecha or '' }}"></label>
+        <label>Impuesto circulacion vence <input type="date" name="impuesto_fecha" value="{{ edit.impuesto_fecha or '' }}"></label>
+
+        <button type="submit" class="btn">Guardar</button>
+        <a href="/coches" class="btn btn-secondary">Cancelar</a>
+    </form>
+
+    <h3>Foto del coche</h3>
+    {% if edit.foto_url %}
+        <img src="{{ edit.foto_url }}" alt="Foto" class="car-photo">
+    {% endif %}
+    <form method="POST" action="/coches/{{ edit.id }}/foto" enctype="multipart/form-data">
+    <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+        <label class="checkbox-label">
+            <input type="file" name="foto" accept="image/*"> Subir foto
+        </label>
+        <button type="submit" class="btn-sm">Subir</button>
+    </form>
+    {% if edit.foto_url %}
+    <form method="POST" action="/coches/{{ edit.id }}/foto/borrar" onsubmit="return confirm('¿Eliminar la foto del coche?')" style="margin-top:0.5rem;">
+        <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+        <button type="submit" class="btn-sm btn-danger">Borrar foto</button>
+    </form>
+    {% endif %}
+{% else %}
+    <h2>Añadir coche</h2>
+    <form method="POST" class="form">
+    <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+        <label>Matricula <input type="text" name="matricula" required placeholder="1234 BCD"></label>
+        <label>Modelo <input type="text" name="modelo" required placeholder="Toyota Corolla"></label>
+        <label>Anyo <input type="number" name="anyo" required></label>
+        <label>Pais
+            <select name="pais">
+                <option value="es">Espana</option>
+                <option value="pt">Portugal</option>
+                <option value="moto_es">Moto-Espana</option>
+                <option value="moto_pt">Moto-Portugal</option>
+            </select>
+        </label>
+        <label>Modo
+            <select name="modo">
+                <option value="partial">Parcial</option>
+                <option value="total">Total</option>
+            </select>
+        </label>
+        <label>Km inicial <input type="text" inputmode="decimal" name="km_inicial" value="0"></label>
+        <label>Motor <input type="text" name="motor" placeholder="Ej: 2.0 TDI"></label>
+        <label>Bastidor (VIN) <input type="text" name="bastidor" placeholder="Ej: VSSZZZ..."></label>
+        <label class="checkbox-label">
+            <input type="checkbox" name="es_prueba"> Excluir de las estadisticas (coche de prueba)
+        </label>
+        <label>Fecha de baja (venta) <input type="date" name="fecha_baja">
+            <span class="hint">Solo si el coche ya no esta en servicio.</span>
+        </label>
+        <button type="submit" class="btn">Añadir coche</button>
+    </form>
+{% endif %}
+
+<h2>Coches existentes</h2>
+<div class="card-grid">
+    {% for c in cars %}
+        {% set vendido = c.fecha_baja and c.fecha_baja <= today %}
+        <div class="card{% if c.es_prueba or vendido %} car-excluido{% endif %}">
+            <div class="car-card-header">{{ plate(c.matricula, c.pais) }}</div>
+            <h3>{{ c.modelo }} ({{ c.anyo }})</h3>
+            {% if c.es_prueba %}<span class="badge badge-warn">Excluido de estadisticas</span>{% endif %}
+            {% if vendido %}<span class="badge badge-danger">Vendido{% if c.fecha_baja %} el {{ c.fecha_baja }}{% endif %}</span>{% endif %}
+            <p>{{ "%.0f"|format(c.km_actual) }} km · {{ c.modo }}</p>
+            {% if c.motor or c.bastidor %}<p class="car-specs" style="font-size:0.85em;color:var(--text2);">
+                {% if c.motor %}Motor: {{ c.motor }}{% endif %}
+                {% if c.motor and c.bastidor %} · {% endif %}
+                {% if c.bastidor %}VIN: {{ c.bastidor }}{% endif %}
+            </p>{% endif %}
+            <div class="card-actions">
+                <a href="/coches/{{ c.id }}/editar" class="btn-sm">Editar</a>
+                <form method="POST" action="/coches/{{ c.id }}/eliminar" onsubmit="return confirm('Eliminar {{ c.modelo }} ({{ c.matricula }})? Se borraran todos sus datos.')">
+    <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+                    <button class="btn-sm btn-danger">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}
