@@ -29,6 +29,7 @@
 - [FAQ](#faq)
 - [For developers](#for-developers)
 - [Tech stack](#tech-stack)
+- [Contact](#contact)
 - [License and author](#license-and-author)
 
 ---
@@ -343,6 +344,18 @@ Basic project layout:
 
 Flask · SQLite (WAL mode) · Jinja2 · Chart.js · WeasyPrint (PDF) ·
 python-telegram-bot · gunicorn · Docker.
+
+---
+
+## Contact
+
+- **Questions and suggestions:** start a thread in
+  [Discussions](https://github.com/Robertomola18/kmtracker/discussions).
+- **Bugs and feature requests:** open an
+  [issue](https://github.com/Robertomola18/kmtracker/issues).
+- **Security issues:** report them **privately** through a
+  [Security Advisory](https://github.com/Robertomola18/kmtracker/security/advisories/new)
+  instead of a public issue. See [SECURITY.md](SECURITY.md).
 
 ---
 

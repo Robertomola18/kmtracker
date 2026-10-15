@@ -29,6 +29,7 @@
 - [Preguntas frecuentes](#preguntas-frecuentes)
 - [Para desarrolladores](#para-desarrolladores)
 - [Tecnologías](#tecnologías)
+- [Contacto](#contacto)
 - [Licencia y autor](#licencia-y-autor)
 
 ---
@@ -348,6 +349,18 @@ Estructura básica del proyecto:
 
 Flask · SQLite (modo WAL) · Jinja2 · Chart.js · WeasyPrint (PDF) ·
 python-telegram-bot · gunicorn · Docker.
+
+---
+
+## Contacto
+
+- **Preguntas y sugerencias:** abre un hilo en las
+  [Discusiones](https://github.com/Robertomola18/kmtracker/discussions).
+- **Errores y peticiones de funciones:** abre una
+  [incidencia (issue)](https://github.com/Robertomola18/kmtracker/issues).
+- **Problemas de seguridad:** repórtalos de forma **privada** mediante un
+  [Security Advisory](https://github.com/Robertomola18/kmtracker/security/advisories/new)
+  en lugar de un issue público. Consulta [SECURITY.md](SECURITY.md).
 
 ---
 
