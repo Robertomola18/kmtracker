@@ -373,10 +373,8 @@ changes. That is how it stays free for everyone.
   Created by <b>Rober Da Silva (DjGuesh)</b> · Rsilva Corp Limited
 </p>
 
-<table align="center">
-  <tr>
-    <td valign="middle"><img src="docs/bandera-espana.png" alt="Spain" height="42"></td>
-    <td align="center" valign="middle"><h3>&nbsp;&nbsp;100% Spanish product&nbsp;&nbsp;</h3></td>
-    <td valign="middle"><img src="docs/bandera-bierzo.png" alt="El Bierzo" height="42"></td>
-  </tr>
-</table>
+<h2 align="center">
+  <img src="docs/bandera-espana.png" alt="Spain" height="48">&nbsp;&nbsp;
+  100% Spanish product&nbsp;&nbsp;
+  <img src="docs/bandera-bierzo.png" alt="El Bierzo" height="48">
+</h2>

@@ -378,10 +378,8 @@ de tus cambios. Así se mantiene libre para todos.
   Creado por <b>Rober Da Silva (DjGuesh)</b> · Rsilva Corp Limited
 </p>
 
-<table align="center">
-  <tr>
-    <td valign="middle"><img src="docs/bandera-espana.png" alt="España" height="42"></td>
-    <td align="center" valign="middle"><h3>&nbsp;&nbsp;Producto 100% español&nbsp;&nbsp;</h3></td>
-    <td valign="middle"><img src="docs/bandera-bierzo.png" alt="El Bierzo" height="42"></td>
-  </tr>
-</table>
+<h2 align="center">
+  <img src="docs/bandera-espana.png" alt="España" height="48">&nbsp;&nbsp;
+  Producto 100% español&nbsp;&nbsp;
+  <img src="docs/bandera-bierzo.png" alt="El Bierzo" height="48">
+</h2>
