@@ -18,6 +18,7 @@
 
 ## Contents
 
+- [Screenshots](#screenshots)
 - [What is KMtracker?](#what-is-kmtracker)
 - [Who is it for?](#who-is-it-for)
 - [Everything you can do](#everything-you-can-do)
@@ -31,6 +32,33 @@
 - [Tech stack](#tech-stack)
 - [Contact](#contact)
 - [License and author](#license-and-author)
+
+---
+
+## Screenshots
+
+<p align="center">
+  <img src="docs/capturas/demo.gif" alt="KMtracker demo" width="620">
+</p>
+
+<table>
+  <tr>
+    <td align="center" width="50%"><b>Dashboard</b><br><a href="docs/capturas/panel.png"><img src="docs/capturas/panel.png" width="440" alt="Dashboard"></a></td>
+    <td align="center" width="50%"><b>Vehicle profile</b><br><a href="docs/capturas/coche.png"><img src="docs/capturas/coche.png" width="440" alt="Vehicle profile"></a></td>
+  </tr>
+  <tr>
+    <td align="center" width="50%"><b>Fuel</b><br><a href="docs/capturas/combustible.png"><img src="docs/capturas/combustible.png" width="440" alt="Fuel"></a></td>
+    <td align="center" width="50%"><b>Maintenance</b><br><a href="docs/capturas/mantenimiento.png"><img src="docs/capturas/mantenimiento.png" width="440" alt="Maintenance"></a></td>
+  </tr>
+  <tr>
+    <td align="center" width="50%"><b>Expenses</b><br><a href="docs/capturas/gastos.png"><img src="docs/capturas/gastos.png" width="440" alt="Expenses"></a></td>
+    <td align="center" width="50%"><b>Reports</b><br><a href="docs/capturas/informes.png"><img src="docs/capturas/informes.png" width="440" alt="Reports"></a></td>
+  </tr>
+  <tr>
+    <td align="center" width="50%"><b>Administration</b><br><a href="docs/capturas/admin.png"><img src="docs/capturas/admin.png" width="440" alt="Administration"></a></td>
+    <td align="center" width="50%"><b>Login</b><br><a href="docs/capturas/login.png"><img src="docs/capturas/login.png" width="440" alt="Login"></a></td>
+  </tr>
+</table>
 
 ---
 
