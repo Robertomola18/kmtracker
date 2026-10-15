@@ -370,5 +370,8 @@ changes. That is how it stays free for everyone.
 
 <p align="center">
   <img src="docs/firma.png" alt="R. Silva" width="220"><br>
-  Created by <b>Rober Da Silva (DjGuesh)</b> · Rsilva Corp Limited
+  Created by <b>Rober Da Silva (DjGuesh)</b> · Rsilva Corp Limited<br>
+  <b>100% Spanish product</b>
+  <img src="docs/bandera-espana.png" alt="Spain" height="14">
+  <img src="docs/bandera-bierzo.png" alt="El Bierzo" height="14">
 </p>
