@@ -375,8 +375,11 @@ de tus cambios. Así se mantiene libre para todos.
 
 <p align="center">
   <img src="docs/firma.png" alt="R. Silva" width="220"><br>
-  Creado por <b>Rober Da Silva (DjGuesh)</b> · Rsilva Corp Limited<br>
-  <b>Producto 100% español</b>
-  <img src="docs/bandera-espana.png" alt="España" height="14">
-  <img src="docs/bandera-bierzo.png" alt="El Bierzo" height="14">
+  Creado por <b>Rober Da Silva (DjGuesh)</b> · Rsilva Corp Limited
 </p>
+
+<h3 align="center">
+  <img src="docs/bandera-espana.png" alt="España" height="38">&nbsp;&nbsp;
+  Producto 100% español&nbsp;&nbsp;
+  <img src="docs/bandera-bierzo.png" alt="El Bierzo" height="38">
+</h3>
