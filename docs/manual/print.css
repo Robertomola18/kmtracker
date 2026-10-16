@@ -1,0 +1,142 @@
+@page {
+  size: A4;
+  margin: 20mm 16mm 18mm 16mm;
+  @bottom-center {
+    content: counter(page);
+    color: #8a94a6;
+    font-size: 9pt;
+  }
+  @top-right {
+    content: "KMtracker — Manual de usuario";
+    color: #8a94a6;
+    font-size: 8pt;
+  }
+}
+
+@page :first {
+  @top-right { content: ""; }
+  @bottom-center { content: ""; }
+}
+
+html {
+  font-family: "DejaVu Sans", "Noto Sans", Arial, sans-serif;
+  font-size: 10.5pt;
+  color: #1c2333;
+  line-height: 1.5;
+}
+
+body { margin: 0; padding: 0; }
+
+h1 {
+  font-size: 24pt;
+  color: #0f2b46;
+  border-bottom: 3px solid #14b88f;
+  padding-bottom: 6px;
+  margin: 0 0 14px;
+  text-align: center;
+}
+
+h2 {
+  font-size: 16pt;
+  color: #0f2b46;
+  border-bottom: 1px solid #d8dee9;
+  padding-bottom: 4px;
+  margin-top: 26px;
+  page-break-after: avoid;
+}
+
+h3 {
+  font-size: 12.5pt;
+  color: #14688a;
+  margin-top: 18px;
+  page-break-after: avoid;
+}
+
+p { margin: 8px 0; }
+
+a { color: #14688a; text-decoration: none; }
+
+ul, ol { margin: 8px 0 8px 4px; padding-left: 20px; }
+li { margin: 3px 0; }
+
+hr {
+  border: none;
+  border-top: 1px solid #e2e7ef;
+  margin: 20px 0;
+}
+
+strong { color: #10233a; }
+
+code {
+  font-family: "DejaVu Sans Mono", Consolas, monospace;
+  font-size: 9.5pt;
+  background: #f2f4f8;
+  padding: 1px 4px;
+  border-radius: 3px;
+  color: #b03060;
+}
+
+pre {
+  background: #0f1729;
+  color: #e6edf3;
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 9pt;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+pre code {
+  background: none;
+  color: inherit;
+  padding: 0;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 10px 0;
+  font-size: 9.5pt;
+  page-break-inside: avoid;
+}
+
+th, td {
+  border: 1px solid #d8dee9;
+  padding: 5px 8px;
+  text-align: left;
+  vertical-align: top;
+}
+
+th { background: #eef4fa; color: #0f2b46; }
+
+blockquote {
+  margin: 10px 0;
+  padding: 6px 14px;
+  border-left: 4px solid #14b88f;
+  background: #f0faf7;
+  color: #294056;
+}
+
+img {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  margin: 10px auto 16px;
+  border: 1px solid #d8dee9;
+  border-radius: 6px;
+}
+
+p[align="center"] img {
+  width: 200px;
+  border: none;
+}
+
+.toc ul { list-style: none; padding-left: 0; }
+.toc ul ul { padding-left: 16px; }
+
+h2, h3 { break-after: avoid; }
+img, pre, blockquote, table { break-inside: auto; }
+
+.cover { text-align: center; margin-top: 30mm; }
+.cover img { border: none; width: 260px; }

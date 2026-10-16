@@ -14,10 +14,17 @@
   <a href="README.md">Read in English 🇬🇧</a>
 </p>
 
+<p align="center">
+  📖 <b><a href="docs/manual/manual-es.md">Manual de usuario</a></b> ·
+  <a href="docs/manual/manual-es.pdf">versión PDF</a> ·
+  <a href="docs/manual/manual-en.md">English manual</a>
+</p>
+
 ---
 
 ## Índice
 
+- [Manual de usuario](docs/manual/manual-es.md)
 - [Capturas](#capturas)
 - [¿Qué es KMtracker?](#qué-es-kmtracker)
 - [¿Para quién es?](#para-quién-es)
