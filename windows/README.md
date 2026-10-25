@@ -274,14 +274,15 @@ volumes and use the backup/export tools.
 | The container name `kmtracker` is already in use | Run `docker ps -a --filter "name=kmtracker"`. Stop the old instance with `docker compose down` in its folder, or remove the old container. Use only one instance. |
 | `git pull` fails because of local changes | Run `git status`. Commit or stash your changes. Do not use `git reset --hard` if you want to keep them. |
 | WSL2 errors or Docker Desktop will not start | Run `wsl --update`, then `wsl --shutdown`, and start Docker Desktop again. Check that virtualization is enabled in the BIOS/UEFI. |
-| Cannot log in after changing `.env` | The password hash was already created on the first start. Changing the environment variable does not update it. Restore a backup or reset the database password; there is no password-change screen in this version. |
+| Cannot log in after changing `.env` | The password hash was already created on the first start. Changing the environment variable does not update it. Use [Reset a forgotten password](#reset-a-forgotten-password); there is no password-change screen in this version. |
 | No space left on device | Free space in Docker Desktop or move its disk image to a larger drive. Do not delete volumes unless you have a backup. |
 
 ### Reset a forgotten password
 
 Changing `KMTRACKER_PASSWORD` in `.env` does not update an existing password
-hash. If you have forgotten the password, create a backup first, set the new
-password in `.env`, then run these commands with the container running:
+hash. If you can still log in, create a backup first. Set the new password in
+`.env` and start the container if it is stopped (`docker compose up -d`), then
+run these commands:
 
 ```powershell
 docker compose exec kmtracker python3 -c "from models import get_db; conn = get_db(); conn.execute('DELETE FROM settings WHERE key = ?', ('password_hash',)); conn.commit(); conn.close()"

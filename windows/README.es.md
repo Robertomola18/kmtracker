@@ -280,15 +280,15 @@ con nombre y usa las herramientas de copia.
 | El nombre de contenedor `kmtracker` ya está en uso | Ejecuta `docker ps -a --filter "name=kmtracker"`. Para la instancia antigua con `docker compose down` en su carpeta, o elimina el contenedor antiguo. Usa una sola instancia. |
 | `git pull` falla por cambios locales | Ejecuta `git status`. Haz commit o guarda los cambios. No uses `git reset --hard` si quieres conservarlos. |
 | Errores de WSL2 o Docker Desktop no arranca | Ejecuta `wsl --update`, después `wsl --shutdown`, y vuelve a arrancar Docker Desktop. Comprueba que la virtualización está activada en la BIOS/UEFI. |
-| No puedo entrar después de cambiar `.env` | El hash de la contraseña se creó en el primer arranque. Cambiar la variable de entorno no lo actualiza. Restaura una copia o resetea la contraseña de la base de datos; en esta versión no hay pantalla para cambiarla. |
+| No puedo entrar después de cambiar `.env` | El hash de la contraseña se creó en el primer arranque. Cambiar la variable de entorno no lo actualiza. Usa [Resetear una contraseña olvidada](#resetear-una-contraseña-olvidada); en esta versión no hay pantalla para cambiarla. |
 | No queda espacio en disco | Libera espacio en Docker Desktop o mueve su imagen de disco a otra unidad. No borres volúmenes sin una copia. |
 
 ### Resetear una contraseña olvidada
 
 Cambiar `KMTRACKER_PASSWORD` en `.env` no actualiza el hash de una contraseña ya
-existente. Si has olvidado la contraseña, haz primero una copia de seguridad,
-escribe la nueva contraseña en `.env` y ejecuta estos comandos con el contenedor
-arrancado:
+existente. Si aún puedes entrar, haz primero una copia de seguridad. Escribe la
+nueva contraseña en `.env` y arranca el contenedor si está parado
+(`docker compose up -d`); después ejecuta estos comandos:
 
 ```powershell
 docker compose exec kmtracker python3 -c "from models import get_db; conn = get_db(); conn.execute('DELETE FROM settings WHERE key = ?', ('password_hash',)); conn.commit(); conn.close()"
