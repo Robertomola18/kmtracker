@@ -8,6 +8,7 @@ import logging
 import time
 import secrets
 import shutil
+import tempfile
 from io import BytesIO, StringIO
 from pathlib import Path
 from collections import defaultdict
@@ -41,7 +42,7 @@ from models import (
 )
 from backup import (
     list_backups, create_backup, restore_backup, delete_backup, safe_name,
-    backup_dir as _backup_dir,
+    snapshot_database, replaced_database, backup_dir as _backup_dir,
 )
 from datetime import date, datetime, timedelta
 
@@ -271,12 +272,36 @@ def admin():
 @app.route('/admin/backup')
 @login_required
 def admin_backup():
-    return send_file(DB_PATH, as_attachment=True, download_name='kmtracker.db')
+    tmp_dir = os.path.dirname(os.path.abspath(DB_PATH))
+    fd, tmp_path = tempfile.mkstemp(prefix='.download_', suffix='.db', dir=tmp_dir)
+    os.close(fd)
+    try:
+        snapshot_database(DB_PATH, tmp_path)
+    except Exception:
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
+        logger.exception('backup download')
+        flash('No se pudo preparar la descarga de la base de datos.', 'error')
+        return redirect(url_for('admin'))
+    response = send_file(tmp_path, as_attachment=True, download_name='kmtracker.db')
+
+    def _cleanup_download():
+        try:
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
+        except OSError:
+            logger.warning('No se pudo borrar la copia temporal de descarga', exc_info=True)
+
+    response.call_on_close(_cleanup_download)
+    return response
 
 
-@app.route('/admin/restore', methods=['POST'])
+@app.route('/admin/restore', methods=['GET', 'POST'])
 @login_required
 def admin_restore():
+    if request.method == 'GET':
+        flash('Para restaurar, selecciona un archivo .db en el formulario.', 'error')
+        return redirect(url_for('admin'))
     if not _csrf_required():
         return redirect(url_for('admin'))
     file = request.files.get('database')
@@ -294,18 +319,30 @@ def admin_restore():
     if header[:16] != b'SQLite format 3\x00':
         flash('El archivo no es una base de datos SQLite valida', 'error')
         return redirect(url_for('admin'))
-    backup_path = DB_PATH + '.bak'
-    if os.path.exists(DB_PATH):
-        os.replace(DB_PATH, backup_path)
-    file.save(DB_PATH)
+
+    tmp_dir = os.path.dirname(os.path.abspath(DB_PATH))
+    fd, upload_path = tempfile.mkstemp(prefix='.restore_', suffix='.db', dir=tmp_dir)
+    os.close(fd)
     try:
-        from models import init_db, init_settings
-        init_db()
-        init_settings()
-    except Exception:
-        logger.exception('init_db tras restore')
-        flash('Base de datos restaurada, pero las migraciones fallaron. Consulta el log.', 'error')
+        file.save(upload_path)
+        with replaced_database(DB_PATH, upload_path):
+            from models import init_db, init_settings
+            init_db()
+            init_settings()
+    except ValueError as exc:
+        logger.warning('restore upload: %s', exc)
+        flash(f'Error restaurando: {exc}', 'error')
         return redirect(url_for('admin'))
+    except Exception:
+        logger.exception('restore upload')
+        flash('Error restaurando la base de datos. Consulta el log.', 'error')
+        return redirect(url_for('admin'))
+    finally:
+        try:
+            if os.path.exists(upload_path):
+                os.remove(upload_path)
+        except OSError:
+            logger.warning('No se pudo borrar el archivo temporal de restauracion', exc_info=True)
     flash('Base de datos restaurada. Backup anterior guardado como kmtracker.db.bak', 'ok')
     return redirect(url_for('admin'))
 
@@ -340,10 +377,10 @@ def admin_backup_restore(name):
     if not _csrf_required():
         return redirect(url_for('admin'))
     try:
-        restore_backup(DB_PATH, name)
-        from models import init_db, init_settings
-        init_db()
-        init_settings()
+        with restore_backup(DB_PATH, name):
+            from models import init_db, init_settings
+            init_db()
+            init_settings()
         flash(f'Copia restaurada: {name}. La base anterior quedo como kmtracker.db.bak.', 'ok')
     except Exception as e:
         logger.exception('restore backup')

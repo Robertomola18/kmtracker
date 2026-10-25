@@ -24,6 +24,13 @@ Todas las versiones notables de KMtracker.
 ### Corregido
 - `entrypoint.sh` se normaliza durante la construcción para tolerar finales de
   línea CRLF en clones de Windows.
+- `/admin/restore` ya no devuelve 405 al abrirlo directamente: redirige a
+  `/admin` y recuerda que la restauración se hace desde el formulario.
+- Restauración de la base más segura: valida la integridad del archivo, elimina
+  los sidecars WAL/SHM antiguos, conserva la base anterior como `.bak` y
+  recupera automáticamente esa copia si falla la migración.
+- La descarga de la base actual usa la API de backup de SQLite para no entregar
+  una copia inconsistente cuando hay datos pendientes en el WAL.
 - `mantenimiento` faltaba en la validación de categorías de gastos de la web.
 - Borrado de coche: se eliminan explícitamente todos los registros hijos.
 - `init_db()` **auto-repara** filas huérfanas en cada arranque.

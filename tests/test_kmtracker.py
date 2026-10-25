@@ -44,6 +44,19 @@ def test_login_wrong_password_rejected(client):
     assert b'Contrase' in resp.get_data() or b'password' in resp.get_data().lower()
 
 
+def test_admin_restore_get_redirects(logged_client):
+    resp = logged_client.get('/admin/restore')
+    assert resp.status_code == 302
+    assert resp.headers['Location'].endswith('/admin')
+
+
+def test_admin_backup_download_is_sqlite(logged_client):
+    resp = logged_client.get('/admin/backup')
+    assert resp.status_code == 200
+    assert resp.data[:16] == b'SQLite format 3\x00'
+    resp.close()
+
+
 def test_restore_accepts_valid_sqlite(logged_client):
     from models import DB_PATH
     csrf = _get_csrf(logged_client)
@@ -267,3 +280,84 @@ def test_backup_crear_listar_borrar(km_db_path, tmp_path, monkeypatch):
 
     assert backup.delete_backup(km_db_path, name) is True
     assert backup.list_backups(km_db_path) == []
+
+
+def _make_test_db(path, value):
+    conn = sqlite3.connect(path)
+    conn.execute('CREATE TABLE items (v TEXT)')
+    conn.execute('INSERT INTO items (v) VALUES (?)', (value,))
+    conn.commit()
+    conn.close()
+
+
+def _read_test_db(path):
+    conn = sqlite3.connect(path)
+    try:
+        return conn.execute('SELECT v FROM items').fetchone()[0]
+    finally:
+        conn.close()
+
+
+def test_replaced_database_keeps_backup_and_removes_sidecars(tmp_path):
+    import backup
+    live = str(tmp_path / 'live.db')
+    source = str(tmp_path / 'source.db')
+    _make_test_db(live, 'anterior')
+    _make_test_db(source, 'nueva')
+
+    live_conn = sqlite3.connect(live)
+    live_conn.execute('PRAGMA journal_mode=WAL')
+    live_conn.execute('PRAGMA wal_autocheckpoint=0')
+    live_conn.execute("UPDATE items SET v='anterior'")
+    live_conn.commit()
+    assert os.path.exists(live + '-wal')
+
+    try:
+        with backup.replaced_database(live, source) as backup_path:
+            assert _read_test_db(live) == 'nueva'
+            assert backup_path == live + '.bak'
+
+        assert _read_test_db(live) == 'nueva'
+        assert _read_test_db(live + '.bak') == 'anterior'
+        assert not os.path.exists(live + '-wal')
+        assert not os.path.exists(live + '-shm')
+    finally:
+        live_conn.close()
+
+
+def test_replaced_database_rolls_back_on_error(tmp_path):
+    import backup
+    live = str(tmp_path / 'live.db')
+    source = str(tmp_path / 'source.db')
+    _make_test_db(live, 'anterior')
+    _make_test_db(source, 'nueva')
+
+    with pytest.raises(RuntimeError, match='fallo simulado'):
+        with backup.replaced_database(live, source):
+            assert _read_test_db(live) == 'nueva'
+            raise RuntimeError('fallo simulado')
+
+    assert _read_test_db(live) == 'anterior'
+    assert _read_test_db(live + '.bak') == 'anterior'
+    assert not os.path.exists(live + '-wal')
+    assert not os.path.exists(live + '-shm')
+
+
+def test_restore_backup_context(tmp_path, monkeypatch):
+    import backup
+    monkeypatch.setenv('KM_BACKUP_DIR', str(tmp_path / 'backups'))
+    live = str(tmp_path / 'live.db')
+    _make_test_db(live, 'original')
+    name = backup.create_backup(live)
+
+    conn = sqlite3.connect(live)
+    conn.execute("UPDATE items SET v='cambiada'")
+    conn.commit()
+    conn.close()
+
+    with backup.restore_backup(live, name) as restored_name:
+        assert restored_name == name
+        assert _read_test_db(live) == 'original'
+
+    assert _read_test_db(live) == 'original'
+    assert _read_test_db(live + '.bak') == 'cambiada'
