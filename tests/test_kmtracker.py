@@ -32,6 +32,12 @@ def test_wal_journal_mode(km_db_path):
     assert mode == 'wal'
 
 
+def test_root_redirects_to_login_or_panel(client):
+    resp = client.get('/')
+    assert resp.status_code == 302
+    assert resp.headers['Location'].endswith('/login')
+
+
 def test_login_correct_password(logged_client):
     resp = logged_client.get('/panel')
     assert resp.status_code == 200
@@ -44,10 +50,28 @@ def test_login_wrong_password_rejected(client):
     assert b'Contrase' in resp.get_data() or b'password' in resp.get_data().lower()
 
 
-def test_admin_restore_get_redirects(logged_client):
+def test_admin_restore_get_page(logged_client):
     resp = logged_client.get('/admin/restore')
-    assert resp.status_code == 302
-    assert resp.headers['Location'].endswith('/admin')
+    assert resp.status_code == 200
+    assert b'enctype="multipart/form-data"' in resp.data
+    assert b'name="database"' in resp.data
+    assert logged_client.get('/admin/restore/').status_code == 200
+
+
+def test_admin_restore_oversized_redirects(km, logged_client):
+    old_limit = km.app.config['MAX_CONTENT_LENGTH']
+    km.app.config['MAX_CONTENT_LENGTH'] = 64
+    try:
+        csrf = _get_csrf(logged_client)
+        resp = logged_client.post(
+            '/admin/restore',
+            data={'database': (io.BytesIO(b'x' * 256), 'grande.db'), '_csrf': csrf},
+            content_type='multipart/form-data',
+        )
+        assert resp.status_code == 302
+        assert resp.headers['Location'].endswith('/admin')
+    finally:
+        km.app.config['MAX_CONTENT_LENGTH'] = old_limit
 
 
 def test_admin_backup_download_is_sqlite(logged_client):

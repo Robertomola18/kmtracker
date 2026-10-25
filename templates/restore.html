@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Restaurar base de datos - KMtracker{% endblock %}
+{% block content %}
+<h2>Restaurar base de datos</h2>
+
+<p>Sube un archivo SQLite con extensión <code>.db</code>. No subas un
+<code>.tar.gz</code> desde este formulario; para las copias locales usa el botón
+<strong>Restaurar</strong> de la lista de <a href="/admin">Administración</a>.</p>
+
+<p>La base actual se guarda como <code>kmtracker.db.bak</code>. Si la validación
+o las migraciones fallan, se recupera automáticamente esa copia.</p>
+
+<form method="POST" action="{{ url_for('admin_restore') }}" enctype="multipart/form-data" class="form">
+    <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+    <label>Archivo SQLite (.db)
+        <input type="file" name="database" accept=".db" required style="display: block; margin-top: 0.25rem;">
+    </label>
+    <button type="submit" class="btn btn-secondary"
+            onclick="return confirm('Se reemplazara la base de datos actual. Continuar?')">Restaurar</button>
+</form>
+
+<p style="font-size: 0.9rem; color: var(--text2);">
+    Tamaño máximo: {{ max_upload_mb }} MB. Directorio de copias:
+    <code>{{ backup_dir }}</code>.
+</p>
+
+<h3>Si la base viene de otra instalación</h3>
+<p>No copies solo el archivo <code>kmtracker.db</code> mientras la aplicación de
+origen está funcionando: puede tener datos pendientes en el WAL. Crea una copia
+consistente con:</p>
+<pre style="overflow-x: auto;"><code>sqlite3 /ruta/kmtracker.db ".backup '/ruta/kmtracker_produccion.db'"</code></pre>
+<p>Después sube <code>kmtracker_produccion.db</code> aquí.</p>
+
+<p><a class="btn" href="/admin">Volver a Administración</a></p>
+{% endblock %}

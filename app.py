@@ -47,6 +47,7 @@ from backup import (
 from datetime import date, datetime, timedelta
 
 app = Flask(__name__)
+MAX_DB_UPLOAD = 128 * 1024 * 1024
 
 
 # Secret key: env var > archivo persistente
@@ -65,7 +66,7 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['SESSION_COOKIE_SECURE'] = True
-app.config['MAX_CONTENT_LENGTH'] = 32 * 1024 * 1024
+app.config['MAX_CONTENT_LENGTH'] = MAX_DB_UPLOAD
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 86400
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=12)
 
@@ -145,6 +146,12 @@ EXPENSE_CATEGORIES = (
 )
 
 
+@app.errorhandler(413)
+def _request_too_large(_error):
+    flash(f'El archivo excede el tamaño máximo de {MAX_DB_UPLOAD // (1024 * 1024)} MB.', 'error')
+    return redirect(url_for('admin'))
+
+
 @app.after_request
 def _security_headers(response):
     response.headers.setdefault('X-Content-Type-Options', 'nosniff')
@@ -206,6 +213,13 @@ def login_required(route):
             return redirect(url_for('login'))
         return route(*a, **kw)
     return wrapper
+
+
+@app.route('/')
+def index():
+    if session.get('autenticado'):
+        return redirect(url_for('dashboard'))
+    return redirect(url_for('login'))
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -296,12 +310,12 @@ def admin_backup():
     return response
 
 
-@app.route('/admin/restore', methods=['GET', 'POST'])
+@app.route('/admin/restore', methods=['GET', 'POST'], strict_slashes=False)
 @login_required
 def admin_restore():
     if request.method == 'GET':
-        flash('Para restaurar, selecciona un archivo .db en el formulario.', 'error')
-        return redirect(url_for('admin'))
+        return render_template('restore.html', backup_dir=_backup_dir(DB_PATH),
+                               max_upload_mb=MAX_DB_UPLOAD // (1024 * 1024))
     if not _csrf_required():
         return redirect(url_for('admin'))
     file = request.files.get('database')
@@ -311,8 +325,8 @@ def admin_restore():
     file.seek(0, os.SEEK_END)
     size = file.tell()
     file.seek(0)
-    if size > 32 * 1024 * 1024:
-        flash('El archivo excede el tamaño máximo de 32 MB.', 'error')
+    if size > MAX_DB_UPLOAD:
+        flash(f'El archivo excede el tamaño máximo de {MAX_DB_UPLOAD // (1024 * 1024)} MB.', 'error')
         return redirect(url_for('admin'))
     header = file.read(16)
     file.seek(0)
@@ -333,9 +347,9 @@ def admin_restore():
         logger.warning('restore upload: %s', exc)
         flash(f'Error restaurando: {exc}', 'error')
         return redirect(url_for('admin'))
-    except Exception:
+    except Exception as exc:
         logger.exception('restore upload')
-        flash('Error restaurando la base de datos. Consulta el log.', 'error')
+        flash(f'Error restaurando: {exc}', 'error')
         return redirect(url_for('admin'))
     finally:
         try:

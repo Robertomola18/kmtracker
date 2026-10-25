@@ -24,8 +24,11 @@ Todas las versiones notables de KMtracker.
 ### Corregido
 - `entrypoint.sh` se normaliza durante la construcción para tolerar finales de
   línea CRLF en clones de Windows.
-- `/admin/restore` ya no devuelve 405 al abrirlo directamente: redirige a
-  `/admin` y recuerda que la restauración se hace desde el formulario.
+- `/admin/restore` ya no devuelve 405: muestra una página propia con el
+  formulario de subida y un enlace desde `/admin`.
+- La raíz `/` redirige al panel o al login en vez de devolver 404.
+- El límite de subida de bases de datos se eleva a 128 MB y los archivos
+  demasiado grandes muestran un aviso claro en vez de un error 413 genérico.
 - Restauración de la base más segura: valida la integridad del archivo, elimina
   los sidecars WAL/SHM antiguos, conserva la base anterior como `.bak` y
   recupera automáticamente esa copia si falla la migración.
@@ -37,6 +40,8 @@ Todas las versiones notables de KMtracker.
 
 ### Cambiado
 - Sustituido el backend de backup específico de OneDrive por copias locales.
+- Gunicorn envía sus errores a la salida del contenedor para que
+  `docker compose logs kmtracker` muestre los tracebacks.
 
 ## [1.0.0] - 2026-10
 

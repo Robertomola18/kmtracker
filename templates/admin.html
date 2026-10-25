@@ -21,6 +21,7 @@
         <button type="submit" class="btn btn-primary">Crear copia ahora</button>
     </form>
     <a href="/admin/backup" class="btn">Descargar base de datos actual</a>
+    <a href="/admin/restore" class="btn">Abrir página de restauración</a>
     <form method="POST" action="/admin/restore" enctype="multipart/form-data" style="display: flex; gap: 0.5rem; align-items: flex-end;">
         <input type="hidden" name="_csrf" value="{{ csrf_token }}">
         <label>Restaurar desde archivo .db

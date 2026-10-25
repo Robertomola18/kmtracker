@@ -23,4 +23,4 @@ VOLUME ["/data", "/app/static/uploads"]
 EXPOSE 5050
 
 ENTRYPOINT ["/app/entrypoint.sh"]
-CMD ["gunicorn", "-w", "1", "--threads", "2", "--preload", "--max-requests", "500", "--max-requests-jitter", "50", "-b", "0.0.0.0:5050", "--access-logfile", "/dev/null", "--error-logfile", "/dev/null", "app:app"]
+CMD ["gunicorn", "-w", "1", "--threads", "2", "--preload", "--max-requests", "500", "--max-requests-jitter", "50", "-b", "0.0.0.0:5050", "--access-logfile", "/dev/null", "--capture-output", "--error-logfile", "-", "app:app"]
