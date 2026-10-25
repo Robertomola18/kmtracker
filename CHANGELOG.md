@@ -4,6 +4,12 @@ Todas las versiones notables de KMtracker.
 
 ## [Sin publicar]
 
+### Seguridad
+- Actualizadas dependencias: WeasyPrint 70.0 (Pillow 13), requests 2.34.2,
+  Werkzeug 3.1.9, MarkupSafe 3.0.4, click 8.5.0, gunicorn 26.2.0,
+  certifi 2026.10.23 y brotli 1.2.1; auditoría OSV sin vulnerabilidades conocidas.
+- Imagen base Debian con `apt-get upgrade` y `pip`/`setuptools`/`wheel` al día.
+
 ### Añadido
 - Soporte de categoría de gasto **"Mejoras"** y aceptación de **coma decimal**
   en todos los campos numéricos de los formularios.

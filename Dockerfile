@@ -1,12 +1,15 @@
 FROM python:3.11-slim
+ENV DEBIAN_FRONTEND=noninteractive
 
 WORKDIR /app
 
 COPY requirements.txt .
 RUN apt-get update && \
+    apt-get upgrade -y && \
     apt-get install -y --no-install-recommends libpango-1.0-0 libpangocairo-1.0-0 libcairo2 libgdk-pixbuf-2.0-0 libffi-dev && \
     rm -rf /var/lib/apt/lists/* && \
-    pip install --no-cache-dir -r requirements.txt gunicorn
+    python -m pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    python -m pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
