@@ -13,7 +13,10 @@ RUN apt-get update && \
 
 COPY . .
 
-RUN mkdir -p /app/static/uploads /data && chmod 755 /app/static/uploads && chmod +x /app/entrypoint.sh
+RUN sed -i 's/\r$//' /app/entrypoint.sh \
+    && chmod +x /app/entrypoint.sh \
+    && mkdir -p /app/static/uploads /data \
+    && chmod 755 /app/static/uploads
 
 VOLUME ["/data", "/app/static/uploads"]
 
