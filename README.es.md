@@ -15,6 +15,10 @@
 </p>
 
 <p align="center">
+  <b>¿Usas Windows?</b> <a href="#windows-1011-docker-desktop">Instalación con Docker Desktop</a>
+</p>
+
+<p align="center">
   📖 <b><a href="docs/manual/manual-es.md">Manual de usuario</a></b> ·
   <a href="docs/manual/manual-es.pdf">versión PDF</a> ·
   <a href="docs/manual/manual-en.md">English manual</a>
@@ -31,6 +35,7 @@
 - [Todo lo que puedes hacer](#todo-lo-que-puedes-hacer)
 - [Cómo se usa en el día a día](#cómo-se-usa-en-el-día-a-día)
 - [Instalación con Docker (5 minutos)](#instalación-con-docker-5-minutos)
+- [Instalación en Windows](#windows-1011-docker-desktop)
 - [Configuración](#configuración)
 - [Bot de Telegram (opcional)](#bot-de-telegram-opcional)
 - [Copias de seguridad](#copias-de-seguridad)
@@ -242,6 +247,49 @@ docker compose exec kmtracker python3 /app/seed.py
 > **Recomendación de seguridad:** pon KMtracker detrás de un proxy inverso con
 > HTTPS (Caddy, nginx, Traefik) o de una VPN como Tailscale/WireGuard, y expón el
 > puerto 5050 **solo en tu red local**. No lo publiques directamente en Internet.
+
+### Windows 10/11 (Docker Desktop)
+
+KMtracker también se puede ejecutar en Windows 10/11 mediante **Docker Desktop
+con WSL2 y contenedores Linux**. No hace falta instalar Python, Pango ni
+WeasyPrint en Windows: todo va dentro de la imagen.
+
+Requisitos: Windows 10/11 de 64 bits, virtualización activada y Docker Desktop
+con el backend WSL2 usando contenedores Linux.
+
+1. Instala Docker Desktop y asegúrate de que usa **contenedores Linux**.
+2. Clona el repositorio y entra en la carpeta:
+
+   ```powershell
+   git clone https://github.com/Robertomola18/kmtracker.git
+   cd kmtracker
+   ```
+
+3. Crea `.env`, define una contraseña fuerte y guarda el archivo en UTF-8 sin
+   BOM:
+
+   ```powershell
+   Copy-Item .env.example .env
+   notepad .env
+   ```
+
+4. Arranca la aplicación:
+
+   ```powershell
+   docker compose up -d --build
+   ```
+
+5. Abre <http://localhost:5050> e inicia sesión con la contraseña configurada.
+
+Para parar: `docker compose stop`. Para actualizar: `git pull --ff-only` y
+`docker compose up -d --build`. Los datos de los volúmenes se conservan.
+
+> **Windows:** el puerto se publica por defecto en todas las interfaces. Si solo
+> lo usas en este PC, consulta cómo restringirlo a `127.0.0.1` en la guía.
+
+Guía completa (Docker Desktop, WSL2, acceso desde móvil, bot, copias de
+seguridad, actualización y solución de problemas):
+[windows/README.es.md](windows/README.es.md).
 
 ---
 

@@ -11,6 +11,8 @@ Todas las versiones notables de KMtracker.
 - Imagen base Debian con `apt-get upgrade` y `pip`/`setuptools`/`wheel` al día.
 
 ### Añadido
+- **Soporte para Windows 10/11** mediante Docker Desktop y WSL2, con guías de
+  instalación en `windows/README.es.md` y `windows/README.md`.
 - Soporte de categoría de gasto **"Mejoras"** y aceptación de **coma decimal**
   en todos los campos numéricos de los formularios.
 - **Copias de seguridad locales rotativas** desde `/admin` (crear, listar,
@@ -20,6 +22,8 @@ Todas las versiones notables de KMtracker.
 - Bot de Telegram empaquetado como **servicio opcional** (`--profile bot`).
 
 ### Corregido
+- `entrypoint.sh` se normaliza durante la construcción para tolerar finales de
+  línea CRLF en clones de Windows.
 - `mantenimiento` faltaba en la validación de categorías de gastos de la web.
 - Borrado de coche: se eliminan explícitamente todos los registros hijos.
 - `init_db()` **auto-repara** filas huérfanas en cada arranque.

@@ -15,6 +15,10 @@
 </p>
 
 <p align="center">
+  <b>Windows user?</b> <a href="#windows-1011-docker-desktop">Install with Docker Desktop</a>
+</p>
+
+<p align="center">
   📖 <b><a href="docs/manual/manual-en.md">User manual</a></b> ·
   <a href="docs/manual/manual-en.pdf">PDF version</a> ·
   <a href="docs/manual/manual-es.md">Manual en español</a>
@@ -31,6 +35,7 @@
 - [Everything you can do](#everything-you-can-do)
 - [Everyday use](#everyday-use)
 - [Install with Docker (5 minutes)](#install-with-docker-5-minutes)
+- [Windows installation](#windows-1011-docker-desktop)
 - [Configuration](#configuration)
 - [Telegram bot (optional)](#telegram-bot-optional)
 - [Backups](#backups)
@@ -237,6 +242,47 @@ docker compose exec kmtracker python3 /app/seed.py
 > **Security tip:** put KMtracker behind a reverse proxy with HTTPS (Caddy,
 > nginx, Traefik) or a VPN such as Tailscale/WireGuard, and expose port 5050
 > **on your LAN only**. Do not publish it directly to the Internet.
+
+### Windows 10/11 (Docker Desktop)
+
+KMtracker can also run on Windows 10/11 through **Docker Desktop with WSL2 and
+Linux containers**. You do not need to install Python, Pango or WeasyPrint on
+Windows: everything runs inside the application image.
+
+Requirements: Windows 10/11 64-bit, hardware virtualization enabled, and Docker
+Desktop with the WSL2 backend using Linux containers.
+
+1. Install Docker Desktop and make sure it is using **Linux containers**.
+2. Clone the repository and enter the folder:
+
+   ```powershell
+   git clone https://github.com/Robertomola18/kmtracker.git
+   cd kmtracker
+   ```
+
+3. Create `.env`, set a strong password and save the file as UTF-8 without BOM:
+
+   ```powershell
+   Copy-Item .env.example .env
+   notepad .env
+   ```
+
+4. Start the application:
+
+   ```powershell
+   docker compose up -d --build
+   ```
+
+5. Open <http://localhost:5050> and log in with the password you configured.
+
+To stop: `docker compose stop`. To update: `git pull --ff-only` and
+`docker compose up -d --build`. Data in the named volumes is preserved.
+
+> **Windows:** the port is published on all interfaces by default. If you only
+> use it on this PC, see how to restrict it to `127.0.0.1` in the guide.
+
+Full guide (Docker Desktop, WSL2, mobile access, bot, backups, updates and
+troubleshooting): [windows/README.md](windows/README.md).
 
 ---
 
